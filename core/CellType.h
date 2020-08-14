@@ -1,3 +1,6 @@
+#ifndef CELL_TYPE_H
+#define CELL_TYPE_H
+
 struct Color
 {
     int r;
@@ -32,3 +35,5 @@ struct CellType
     static TypeInfo SHELTERED_TIDE_FLAT;
     static TypeInfo SHELTERED_MARSH;
 };
+
+#endif
