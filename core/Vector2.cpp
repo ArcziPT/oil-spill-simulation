@@ -2,60 +2,61 @@
 
 #include <cmath>
 
-Vector2::Vector2(double r, double theta) {
+Vector2::Vector2(double r, double theta)
+{
     this->x = r * std::cos(theta);
     this->y = r * std::sin(theta);
 }
 
-
 std::unique_ptr<Vector2> Vector2::ZERO = std::make_unique<Vector2>(0, 0);
 
-
-Vector2& Vector2::operator+(const Vector2& vec){
+Vector2 &Vector2::operator+(const Vector2 &vec)
+{
     x += vec.x;
     y += vec.y;
 
     return *this;
 }
 
-
-Vector2& Vector2::operator-(const Vector2& vec){
+Vector2 &Vector2::operator-(const Vector2 &vec)
+{
     x -= vec.x;
     y -= vec.y;
 
     return *this;
 }
 
-
-double Vector2::operator*(const Vector2& vec) const{
+double Vector2::operator*(const Vector2 &vec) const
+{
     return x * vec.x + y * vec.y;
 }
 
-
-bool Vector2::operator==(const Vector2& vec) const{
-    return x == vec.x  && y == vec.y;
+bool Vector2::operator==(const Vector2 &vec) const
+{
+    return x == vec.x && y == vec.y;
 }
 
-
-Vector2& Vector2::set(double x, double y){
+Vector2 &Vector2::set(double x, double y)
+{
     this->x = x;
     this->y = y;
 
     return *this;
 }
 
-
-Vector2& Vector2::zero(){
+Vector2 &Vector2::zero()
+{
     x = y = 0;
 
     return *this;
 }
 
-
-Vector2& Vector2::normalize(){
+Vector2 &Vector2::normalize()
+{
     double norm = len();
 
-    if(norm != 0){
+    if (norm != 0)
+    {
         x /= norm;
         y /= norm;
     }
@@ -63,46 +64,48 @@ Vector2& Vector2::normalize(){
     return *this;
 }
 
-
-Vector2& Vector2::flipVertical(double x){
+Vector2 &Vector2::flipVertical(double x)
+{
     this->x = (x - this->x);
 }
 
-
-Vector2& Vector2::flipHorizontal(double y){
+Vector2 &Vector2::flipHorizontal(double y)
+{
     this->y = (y - this->y);
 }
 
-
-double Vector2::len() const{
-    return std::sqrt(x*x + y*y);
+double Vector2::len() const
+{
+    return std::sqrt(x * x + y * y);
 }
 
-
-double Vector2::dist(const Vector2& vec) const{
-    return std::sqrt((x - vec.x)*(x - vec.x) + (y - vec.y)*(y - vec.y));
+double Vector2::dist(const Vector2 &vec) const
+{
+    return std::sqrt((x - vec.x) * (x - vec.x) + (y - vec.y) * (y - vec.y));
 }
 
-
-double Vector2::getTheta() const{
-    return std::atan(y/x);
+double Vector2::getTheta() const
+{
+    return std::atan(y / x);
 }
 
-
-double Vector2::getR() const{
+double Vector2::getR() const
+{
     return len();
 }
 
-
-Vector2::Quadrant Vector2::getQuadrant() const{
-    if(x*y > 0){
-        if(x > 0)
+Vector2::Quadrant Vector2::getQuadrant() const
+{
+    if (x * y > 0)
+    {
+        if (x > 0)
             return Quadrant::FIRST;
         else
             return Quadrant::THIRD;
-        
-    } else{
-        if(x > 0)
+    }
+    else
+    {
+        if (x > 0)
             return Quadrant::FOURTH;
         else
             return Quadrant::SECOND;

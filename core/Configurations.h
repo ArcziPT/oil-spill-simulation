@@ -5,8 +5,9 @@
 
 #include <vector>
 
-struct Configurations{
-    int rows;
+struct Configurations
+{
+	int rows;
 	int cols;
 	double initialMassOfOilPoint;
 	double cellSize;
@@ -16,7 +17,7 @@ struct Configurations{
 	double salinity; // mg/l
 	long simulationTime;
 	double spreadingCoefficient;
-	double mousseViscosity=2;
+	double mousseViscosity = 2;
 	double viscosity;
 	double viscosityParameter; // C4 sebastiano równanie 13
 	double oilWaterTension;
