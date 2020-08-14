@@ -4,6 +4,7 @@
 #include "Configurations.h"
 #include "CellType.h"
 #include "Vector2.h"
+#include "OilPoint.h"
 
 class Cell
 {
@@ -29,8 +30,8 @@ public:
     void addMass(double mass);
     int getRow();
     int getCol();
-    CellType getType();
-    void setType(CellType type);
+    TypeInfo getType();
+    void setType(TypeInfo type);
     Vector2 getWind();
     void setWind(Vector2 wind);
     Vector2 getCurrent();
@@ -46,7 +47,7 @@ private:
     std::vector<OilPoint> deletedOilPoints{};
     int row;
     int col;
-    CellType type = CellType.SEA;
+    TypeInfo type = CellType::SEA;
     Vector2 wind{0, 0};
     Vector2 current{0, 0};
     double temperature = 293.0;
