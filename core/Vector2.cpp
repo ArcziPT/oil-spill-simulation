@@ -2,33 +2,45 @@
 
 #include <cmath>
 
-Vector2::Vector2(double r, double theta)
-{
-    this->x = r * std::cos(theta);
-    this->y = r * std::sin(theta);
-}
-
 std::unique_ptr<Vector2> Vector2::ZERO = std::make_unique<Vector2>(0, 0);
 
-Vector2 &Vector2::operator+(const Vector2 &vec)
+Vector2 Vector2::operator+(const Vector2 &vec) const
 {
-    x += vec.x;
-    y += vec.y;
-
-    return *this;
+    return {x + vec.x, y + vec.y};
 }
 
-Vector2 &Vector2::operator-(const Vector2 &vec)
+Vector2 Vector2::operator-(const Vector2 &vec) const
 {
-    x -= vec.x;
-    y -= vec.y;
-
-    return *this;
+    return {x - vec.x, y - vec.y};
 }
 
+//dot product
 double Vector2::operator*(const Vector2 &vec) const
 {
     return x * vec.x + y * vec.y;
+}
+
+Vector2 Vector2::operator*(double alpha) const
+{
+    return {alpha * x, alpha * y};
+}
+
+void Vector2::operator+=(const Vector2 &vec)
+{
+    x += vec.x;
+    y += vec.y;
+}
+
+void Vector2::operator-=(const Vector2 &vec)
+{
+    x -= vec.x;
+    y -= vec.y;
+}
+
+void Vector2::operator*=(double alpha)
+{
+    x *= alpha;
+    y *= alpha;
 }
 
 bool Vector2::operator==(const Vector2 &vec) const

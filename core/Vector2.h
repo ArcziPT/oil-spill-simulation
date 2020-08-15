@@ -13,7 +13,6 @@ public:
     Vector2(double x, double y) : x(x), y(y) {}
     Vector2(const Vector2 &vec) : x(vec.x), y(vec.y) {}
     Vector2(const std::unique_ptr<Vector2> &vec) : x(vec->x), y(vec->y) {}
-    Vector2(double r, double theta);
 
     //special
     static std::unique_ptr<Vector2> ZERO;
@@ -21,9 +20,13 @@ public:
     //TODO: Assigments and copy/move constructors
 
     //Math
-    Vector2 &operator+(const Vector2 &vec);
-    Vector2 &operator-(const Vector2 &vec);
+    Vector2 operator+(const Vector2 &vec) const;
+    Vector2 operator-(const Vector2 &vec) const;
     double operator*(const Vector2 &vec) const;
+    Vector2 operator*(double alpha) const;
+    void operator+=(const Vector2 &vec);
+    void operator-=(const Vector2 &vec);
+    void operator*=(double alpha);
     bool operator==(const Vector2 &vec) const;
 
     Vector2 &set(double x, double y);
