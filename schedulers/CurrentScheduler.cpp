@@ -11,19 +11,19 @@ void CurrentScheduler::update(int iteration)
     if(it != map.end())
     {
         GridValuesType &array = it->second;
-        sea.setCurrent(array);
+        sea->setCurrent(array);
     }
 }
 
-CurrentScheduler::CurrentScheduler(Sea sea) : Scheduler(sea)
+CurrentScheduler::CurrentScheduler(SeaPtr sea) : Scheduler(sea)
 {
 
 }
 
 void CurrentScheduler::add(int iteration, GridValuesType &array)
 {
-    if((array.size() + 2) != sea.getCells().size() ||
-       array[0].size() != 2 * (sea.getCells().size() - 2))
+    if((array.size() + 2) != sea->getCells().size() ||
+       array[0].size() != 2 * (sea->getCells().size() - 2))
     {
         throw InconsistentSizeException();
     }

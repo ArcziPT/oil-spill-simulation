@@ -17,11 +17,11 @@ typedef std::unordered_map<EditItem, std::unique_ptr<Scheduler>> SchedulerMap;
 class SchedulersController
 {
 private:
-    Sea sea;
+    SeaPtr sea;
     std::unordered_map<EditItem, std::unique_ptr<Scheduler>> schedulersMap;
 
 public:
-    SchedulersController(Sea sea);
+    SchedulersController(SeaPtr sea);
     SchedulerMap& getSchedulersMap();
     void update(int iteration);
 private:

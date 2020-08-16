@@ -11,6 +11,7 @@
 class WindScheduler: public Scheduler
 {
 public:
+    WindScheduler(SeaPtr sea);
     void add(int iteration, GridValuesType &array) override;
     void update(int iteration) override;
 };

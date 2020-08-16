@@ -9,7 +9,7 @@
 #include "OilScheduler.h"
 #include "TemperatureScheduler.h"
 
-SchedulersController::SchedulersController(Sea _sea): sea(_sea)
+SchedulersController::SchedulersController(SeaPtr _sea): sea(_sea)
 {
 
 }

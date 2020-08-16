@@ -4,6 +4,7 @@
 #include "Cell.h"
 #include "Configurations.h"
 
+#include <memory>
 #include <vector>
 #include <schedulers/SchedulersController.h>
 
@@ -49,5 +50,7 @@ private:
 
     void initSystems();
 };
+
+typedef shared_ptr<Sea> SeaPtr;
 
 #endif

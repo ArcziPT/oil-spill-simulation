@@ -11,6 +11,7 @@
 class TemperatureScheduler: public Scheduler
 {
 public:
+    TemperatureScheduler(SeaPtr sea);
     void add(int iteration, GridValuesType &array) override;
     void update(int iteration) override;
 };

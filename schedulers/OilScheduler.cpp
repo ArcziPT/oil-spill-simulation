@@ -10,14 +10,14 @@ void OilScheduler::update(int iteration)
     if(it != map.end())
     {
         GridValuesType &array = it->second;
-        sea.setOil(array);
+        sea->setOil(array);
     }
 }
 
 void OilScheduler::add(int iteration, GridValuesType &array)
 {
-    if ((array.size() + 2) != sea.getCells().size()
-        || (array[0].size() + 2) != sea.getCells().size()) {
+    if ((array.size() + 2) != sea->getCells().size()
+        || (array[0].size() + 2) != sea->getCells().size()) {
         throw InconsistentSizeException();
     }
     bool present = (map.find(iteration) != map.end());
@@ -25,4 +25,9 @@ void OilScheduler::add(int iteration, GridValuesType &array)
         throw FilePresentedException();
     }
     map[iteration] = array;
+}
+
+OilScheduler::OilScheduler(SeaPtr sea) : Scheduler(sea)
+{
+
 }

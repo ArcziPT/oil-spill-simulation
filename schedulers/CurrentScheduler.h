@@ -11,7 +11,7 @@
 class CurrentScheduler: public Scheduler
 {
 public:
-    CurrentScheduler(Sea sea);
+    CurrentScheduler(SeaPtr sea);
     void add(int iteration, GridValuesType &array) override;
     void update(int iteration) override;
 };

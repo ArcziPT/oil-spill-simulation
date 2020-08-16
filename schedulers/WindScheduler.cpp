@@ -6,7 +6,7 @@
 
 void WindScheduler::add(int iteration, GridValuesType &array)
 {
-    if ((array.size() + 2) != sea.getCells().length || (array[0].size() != 2 * (sea.getCells().size() - 2))) {
+    if ((array.size() + 2) != sea->getCells().size() || (array[0].size() != 2 * (sea->getCells().size() - 2))) {
         throw InconsistentSizeException();
     }
     bool present = (map.find(iteration) != map.end());
@@ -22,6 +22,11 @@ void WindScheduler::update(int iteration)
     if(it != map.end())
     {
         GridValuesType &array = it->second;
-        sea.setWind(array);
+        sea->setWind(array);
     }
+}
+
+WindScheduler::WindScheduler(SeaPtr sea) : Scheduler(sea)
+{
+
 }

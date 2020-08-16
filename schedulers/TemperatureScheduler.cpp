@@ -6,7 +6,7 @@
 
 void TemperatureScheduler::add(int iteration, GridValuesType &array)
 {
-    if ((array.size() + 2) != sea.getCells().length || (array[0].size() + 2) != sea.getCells().length) {
+    if ((array.size() + 2) != sea->getCells().size() || (array[0].size() + 2) != sea->getCells().length) {
         throw InconsistentSizeException();
     }
     bool present = (map.find(iteration) != map.end());
@@ -22,6 +22,11 @@ void TemperatureScheduler::update(int iteration)
     if(it != map.end())
     {
         GridValuesType &array = it->second;
-        sea.setTemperature(array);
+        sea->setTemperature(array);
     }
+}
+
+TemperatureScheduler::TemperatureScheduler(SeaPtr sea) : Scheduler(sea)
+{
+
 }

@@ -15,10 +15,10 @@ class Scheduler
 {
 protected:
     std::unordered_map<int, GridValuesType> map;
-    Sea sea;
+    SeaPtr sea;
     
 public:
-    Scheduler(Sea _sea);
+    Scheduler(SeaPtr _sea);
     virtual void add(int iteration, GridValuesType& array) = 0;
     void remove(int iteration);
     virtual void update(int iteration) = 0;

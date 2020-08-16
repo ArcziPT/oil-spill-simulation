@@ -11,6 +11,7 @@
 class OilScheduler: public Scheduler
 {
 public:
+    OilScheduler(SeaPtr sea);
     void update(int iteration) override;
     void add(int iteration, GridValuesType &array) override;
 };
