@@ -11,7 +11,7 @@
 class WindScheduler: public Scheduler
 {
 public:
-    void add(int iteration, GridType &array) override;
+    void add(int iteration, GridValuesType &array) override;
     void update(int iteration) override;
 };
 

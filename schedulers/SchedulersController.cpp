@@ -16,20 +16,21 @@ SchedulersController::SchedulersController(Sea _sea): sea(_sea)
 
 SchedulerMap &SchedulersController::getSchedulersMap()
 {
-    return schedulers;
+    return schedulersMap;
 }
 
 void SchedulersController::update(int iteration)
 {
-    for (std::unique_ptr<Scheduler> scheduler : this->schedulersMap) {
-        scheduler.update(iteration);
+    for (auto& it : this->schedulersMap) {
+        std::unique_ptr<Scheduler>& scheduler = it.second;
+        scheduler->update(iteration);
     }
 }
 
 void SchedulersController::initializeSchedulersMap()
 {
-    schedulersMap[EditItem.CURRENT] = std::unique_ptr<CurrentScheduler>(new CurrentScheduler);
-    schedulersMap[EditItem.WIND] = std::unique_ptr<WindScheduler>(new WindScheduler);
-    schedulersMap[EditItem.OIL] = std::unique_ptr<OilScheduler>(new OilScheduler);
-    schedulersMap[EditItem.TEMPERATURE] = std::unique_ptr<TemperatureScheduler>(new TemperatureScheduler);
+    schedulersMap[EditItem::CURRENT] = std::unique_ptr<CurrentScheduler>(new CurrentScheduler(sea));
+    schedulersMap[EditItem::WIND] = std::unique_ptr<WindScheduler>(new WindScheduler(sea));
+    schedulersMap[EditItem::OIL] = std::unique_ptr<OilScheduler>(new OilScheduler(sea));
+    schedulersMap[EditItem::TEMPERATURE] = std::unique_ptr<TemperatureScheduler>(new TemperatureScheduler(sea));
 }

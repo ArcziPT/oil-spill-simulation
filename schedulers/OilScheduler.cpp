@@ -9,12 +9,12 @@ void OilScheduler::update(int iteration)
     auto it = map.find(iteration);
     if(it != map.end())
     {
-        GridType &array = it->second;
+        GridValuesType &array = it->second;
         sea.setOil(array);
     }
 }
 
-void OilScheduler::add(int iteration, GridType &array)
+void OilScheduler::add(int iteration, GridValuesType &array)
 {
     if ((array.size() + 2) != sea.getCells().size()
         || (array[0].size() + 2) != sea.getCells().size()) {

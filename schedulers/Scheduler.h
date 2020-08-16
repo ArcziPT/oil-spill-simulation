@@ -7,18 +7,19 @@
 
 #include <unordered_map>
 #include <vector>
+#include <core/Sea.h>
+#include <exceptions.h>
 
-typedef std::vector<std::vector<double>> GridType;
 
 class Scheduler
 {
 protected:
-    std::unordered_map<int, GridType> map;
+    std::unordered_map<int, GridValuesType> map;
     Sea sea;
     
 public:
     Scheduler(Sea _sea);
-    virtual void add(int iteration, GridType& array) = 0;
+    virtual void add(int iteration, GridValuesType& array) = 0;
     void remove(int iteration);
     virtual void update(int iteration) = 0;
 };

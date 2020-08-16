@@ -8,6 +8,9 @@
 
 #include <unordered_map>
 #include <memory>
+#include <core/Sea.h>
+#include <core/EditItem.h>
+#include "Scheduler.h"
 
 typedef std::unordered_map<EditItem, std::unique_ptr<Scheduler>> SchedulerMap;
 

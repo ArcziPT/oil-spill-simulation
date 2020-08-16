@@ -12,7 +12,7 @@ class OilScheduler: public Scheduler
 {
 public:
     void update(int iteration) override;
-    void add(int iteration, GridType &array) override;
+    void add(int iteration, GridValuesType &array) override;
 };
 
 

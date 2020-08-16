@@ -5,8 +5,10 @@
 #include "Configurations.h"
 
 #include <vector>
+#include <schedulers/SchedulersController.h>
 
 using CellGrid = std::vector<std::vector<Cell>>;
+typedef std::vector<std::vector<double>> GridValuesType;
 
 class Sea
 {

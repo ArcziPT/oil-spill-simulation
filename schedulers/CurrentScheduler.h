@@ -12,7 +12,7 @@ class CurrentScheduler: public Scheduler
 {
 public:
     CurrentScheduler(Sea sea);
-    void add(int iteration, GridType &array) override;
+    void add(int iteration, GridValuesType &array) override;
     void update(int iteration) override;
 };
 

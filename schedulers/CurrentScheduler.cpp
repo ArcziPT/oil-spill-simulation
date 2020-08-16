@@ -10,7 +10,7 @@ void CurrentScheduler::update(int iteration)
     auto it = map.find(iteration);
     if(it != map.end())
     {
-        GridType &array = it->second;
+        GridValuesType &array = it->second;
         sea.setCurrent(array);
     }
 }
@@ -20,7 +20,7 @@ CurrentScheduler::CurrentScheduler(Sea sea) : Scheduler(sea)
 
 }
 
-void CurrentScheduler::add(int iteration, GridType &array)
+void CurrentScheduler::add(int iteration, GridValuesType &array)
 {
     if((array.size() + 2) != sea.getCells().size() ||
        array[0].size() != 2 * (sea.getCells().size() - 2))
