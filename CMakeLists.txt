@@ -12,4 +12,16 @@ endif ()
 project(OilSpill)
 add_executable(OilSpill main.cpp schedulers/CurrentScheduler.cpp schedulers/CurrentScheduler.h
         schedulers/Scheduler.cpp schedulers/Scheduler.h schedulers/OilScheduler.cpp schedulers/OilScheduler.h
-        schedulers/SchedulersController.cpp schedulers/SchedulersController.h schedulers/TemperatureScheduler.cpp schedulers/TemperatureScheduler.h schedulers/WindScheduler.cpp schedulers/WindScheduler.h)
+        schedulers/SchedulersController.cpp schedulers/SchedulersController.h schedulers/TemperatureScheduler.cpp schedulers/TemperatureScheduler.h schedulers/WindScheduler.cpp schedulers/WindScheduler.h
+        core/Cell.cpp core/Cell.h
+        core/CellType.cpp core/CellType.h
+        core/Configurations.h
+        core/EditItem.h
+        core/OilComponent.cpp core/OilComponent.h
+        core/OilPoint.cpp core/OilPoint.h
+        core/Sea.cpp core/Sea.h
+        core/Vector2.cpp core/Vector2.h exceptions.h)
+
+
+message("Root dir: " ${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR})
