@@ -12,11 +12,15 @@ struct Color
 
 struct TypeInfo
 {
+    int id;
+
     double halfTime;
     Color color;
 
-    TypeInfo(double halfTime, Color color) : halfTime(halfTime), color(color) {}
+    TypeInfo(int id, double halfTime, Color color) : id(id), halfTime(halfTime), color(color) {}
     double rateConstant();
+
+    bool operator==(const TypeInfo& type) const;
 };
 
 struct CellType
