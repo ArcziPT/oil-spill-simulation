@@ -4,9 +4,12 @@
 #include "Cell.h"
 #include "Configurations.h"
 
+#include <memory>
 #include <vector>
+#include <schedulers/SchedulersController.h>
 
 using CellGrid = std::vector<std::vector<Cell>>;
+typedef std::vector<std::vector<double>> GridValuesType;
 
 class Sea
 {
@@ -47,5 +50,7 @@ private:
 
     void initSystems();
 };
+
+typedef shared_ptr<Sea> SeaPtr;
 
 #endif
