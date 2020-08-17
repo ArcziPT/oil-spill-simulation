@@ -40,6 +40,9 @@ public:
     double getTheta() const;
     double getR() const;
 
+    double getX() const;
+    double getY() const;
+
     //Quarter
     enum class Quadrant
     {
