@@ -11,6 +11,8 @@ class Cell
 public:
     Cell(int row, int col, Configurations &config) : row(row), col(col), config(config) {}
 
+    Cell& operator=(Cell&& cell);
+
     double getOil();
     double getDensity();
     double getViscosity();

@@ -2,6 +2,20 @@
 
 #include <cmath>
 
+
+Cell& Cell::operator=(Cell &&cell) {
+    this->col = cell.col;
+    this->config = cell.config;
+    this->current = cell.current;
+    this->deletedOilPoints = std::move(cell.deletedOilPoints);
+    this->row = cell.row;
+    this->temperature = cell.temperature;
+    this->type = cell.type;
+    this->wind = cell.wind;
+
+    return *this;
+}
+
 double Cell::getOil()
 {
 	double result = 0;
