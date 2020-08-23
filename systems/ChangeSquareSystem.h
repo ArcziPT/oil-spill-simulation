@@ -5,9 +5,21 @@
 #ifndef OILSPILL_CHANGESQUARESYSTEM_H
 #define OILSPILL_CHANGESQUARESYSTEM_H
 
+#include <core/Cell.h>
+
+using CellGrid = std::vector<std::vector<Cell>>;
 
 class ChangeSquareSystem {
+public:
+    ChangeSquareSystem(CellGrid& cells, Configurations& config): cells(cells), config(config) {}
 
+    void update(int timestep);
+
+private:
+    Configurations& config;
+    CellGrid& cells;
+
+    bool update(Cell& cell, int i);
 };
 
 
