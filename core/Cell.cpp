@@ -1,6 +1,7 @@
 #include "Cell.h"
 
 #include <cmath>
+#include <random>
 
 
 Cell& Cell::operator=(Cell &&cell) {
@@ -167,29 +168,9 @@ double Cell::getVolume()
 	}
 }
 
-// std::string Cell::getComponentsString()
-// {
-
-// 	std::vector<double> xValues = getComponentsFraction();
-// 	if (xValues.size() != 0)
-// 	{
-// 		StringBuilder builder = new StringBuilder();
-// 		for (int i = 0; i < xValues.size(); i++)
-// 		{
-// 			ComponentOfOil comp = config
-// 									  .getComponentsOfOil()
-// 									  .get(i);
-// 			builder.append("component " + (i + 1) + " : x=" + xValues.get(i) + " M=" + comp.getMolecularWeigth() + " Tb=" + comp.getTb() + "  <br/>");
-// 		}
-// 		return builder.toString();
-// 	}
-// 	else
-// 		return "";
-// }
-
 std::vector<double> Cell::getComponentsFraction()
 {
-	if (oilPoints.size() > 0)
+	if (!oilPoints.empty())
 	{
 		int numberOfComponents = config.oilComponents.size();
 		std::vector<double> xValues(numberOfComponents, 0);
@@ -203,7 +184,7 @@ std::vector<double> Cell::getComponentsFraction()
 			{
 				x += op.components[i].getX() * op.mass;
 			}
-			xValues.add(x / oilMass);
+			xValues.push_back(x / oilMass);
 		}
 		return xValues;
 	}
@@ -219,94 +200,28 @@ double Cell::getThickness()
 void Cell::setOil(double mass)
 {
 	oilPoints.clear();
-	int n = (int)(mass / config.initialMassOfOilPoint;
+	int n = (int)(mass / config.initialMassOfOilPoint);
 	addOilPoints(n);
 }
 
-// void Cell::addOilPoints(int n)
-// {
-// 	Random rand = new Random();
+ void Cell::addOilPoints(int n)
+ {
+     std::random_device rd;
+     std::mt19937 mt(rd());
+     std::uniform_real_distribution<double> dist(1.0, 10.0);
 
-// 	for (int i = 0; i < n; i++)
-// 	{
-// 		double x = (double)((col + rand.nextDouble()) * config
-// 															.getCellSize());
-// 		double y = (double)((row + rand.nextDouble()) * config
-// 															.getCellSize());
+ 	for (int i = 0; i < n; i++)
+ 	{
+ 	    //TODO????: replace '*' with '%'
+ 		auto x = (double)((col + dist(mt)) * config.cellSize);
+ 		auto y = (double)((row + dist(mt)) * config.cellSize);
 
-// 		oilPoints.add(new OilPoint(new Vector2(x, y),
-// 								   Incrementator.autoIncrementId++, config, this));
-// 	}
-// }
+ 		oilPoints.push_back(OilPoint(Vector2(x, y), config, *this));
+ 	}
+ }
 
 void Cell::addMass(double mass)
 {
 	int n = (int)(mass / config.initialMassOfOilPoint);
 	addOilPoints(n);
-}
-
-int Cell::getRow()
-{
-	return row;
-}
-
-int Cell::getCol()
-{
-	return col;
-}
-
-CellType Cell::getType()
-{
-	return type;
-}
-
-void Cell::setType(CellType type)
-{
-	this->type = type;
-}
-
-Vector2 Cell::getWind()
-{
-	return wind;
-}
-
-void Cell::setWind(Vector2 wind)
-{
-	this->wind = wind;
-}
-
-Vector2 Cell::getCurrent()
-{
-	return current;
-}
-
-void Cell::setCurrent(Vector2 current)
-{
-
-	this->current = current;
-}
-
-std::vector<OilPoint> Cell::getOilPoints()
-{
-	return oilPoints;
-}
-
-double Cell::getTemperature()
-{
-	return temperature;
-}
-
-void Cell::setTemperature(double temperature)
-{
-	this->temperature = temperature;
-}
-
-std::vector<OilPoint> Cell::getDeletedOilPoints()
-{
-	return deletedOilPoints;
-}
-
-void Cell::setDeletedOilPoints(const std::vector<OilPoint> &deletedOilPoints)
-{
-	this->deletedOilPoints = deletedOilPoints;
 }
