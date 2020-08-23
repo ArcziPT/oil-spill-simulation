@@ -20,7 +20,7 @@ add_executable(OilSpill main.cpp schedulers/CurrentScheduler.cpp schedulers/Curr
         core/OilComponent.cpp core/OilComponent.h
         core/OilPoint.cpp core/OilPoint.h
         core/Sea.cpp core/Sea.h
-        core/Vector2.cpp core/Vector2.h exceptions.h systems/ChangeSquareSystem.cpp systems/ChangeSquareSystem.h systems/OilSystem.h systems/TimeCounter.cpp systems/TimeCounter.h)
+        core/Vector2.cpp core/Vector2.h exceptions.h systems/ChangeSquareSystem.cpp systems/ChangeSquareSystem.h systems/OilSystem.h systems/TimeCounter.cpp systems/TimeCounter.h systems/OilPointComponentSystem.cpp systems/OilPointComponentSystem.h)
 
 
 message("Root dir: " ${PROJECT_SOURCE_DIR})
