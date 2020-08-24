@@ -8,6 +8,7 @@
 
 struct Cell
 {
+    Cell
     Cell(int row, int col, Configurations &config) : row(row), col(col), config(config) {}
 
     Cell& operator=(Cell&& cell);
