@@ -8,17 +8,17 @@ struct Color
     int b;
 
     Color(int r, int g, int b) : r(r), g(g), b(b) {}
+
+    bool operator==(const Color& color) const;
 };
 
 struct TypeInfo
 {
-    int id;
-
     double halfTime;
     Color color;
 
-    TypeInfo(int id, double halfTime, Color color) : id(id), halfTime(halfTime), color(color) {}
-    double rateConstant();
+    TypeInfo(double halfTime, Color color) : halfTime(halfTime), color(color) {}
+    double rateConstant() const;
 
     bool operator==(const TypeInfo& type) const;
 };
