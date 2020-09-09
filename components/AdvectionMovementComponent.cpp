@@ -4,29 +4,23 @@
 
 #include "AdvectionMovementComponent.h"
 #include "OilPointComponent.h"
-#include "Vector2.h"
+#include "core/Vector2.h"
+#include "core/OilPoint.h"
 
-AdvectionMovementComponent::AdvectionMovementComponent(std::shared_ptr<Configurations> config) : config(config) {
+AdvectionMovementComponent::AdvectionMovementComponent(std::shared_ptr<Configurations> config) {
     this->cellSize = config->cellSize;
     this->config = config;
 }
 
 void AdvectionMovementComponent::update(std::shared_ptr<Cell> cell, std::vector<OilPoint>::iterator it,
                                         const int &timestep) {
-    OilPoint oilPoint = *(it + 1);
-    Vector2 offset(timestep, timestep);
+    it += 1;
+    it->velocity *= timestep;
 
-
-    offset = offset * oilPoint.velocity;
-
-    if (offset.getX() > cellSize || offset.getY() > cellSize) {
+    if (it->velocity.x > cellSize || it->velocity.y > cellSize) {
         std::cout << "Za du�y krok!!!!!!" << std::endl;
     }
-
-    oilPoint.position = oilPoint.position + offset;
-
-
-    oilPoint.velocity.zero();
-    *(it + 1) = oilPoint;
+    it->position += it->velocity;
+    it->velocity.zero();
 
 }

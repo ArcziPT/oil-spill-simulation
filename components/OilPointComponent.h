@@ -3,6 +3,7 @@
 //
 #include <iostream>
 #include <vector>
+#include "core/OilPoint.h"
 
 #ifndef OILSPILL_OILPOINTCOMPONENT_H
 #define OILSPILL_OILPOINTCOMPONENT_H

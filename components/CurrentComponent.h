@@ -1,10 +1,10 @@
 //
 // Created by Mateusz Święszek on 16/08/2020.
 //
-#include "Cell.h"
-#include "Configurations.h"
+#include "core/Cell.h"
+#include "core/Configurations.h"
 #include "OilPointComponent.h"
-#include "Vector2.h"
+#include "core/Vector2.h"
 
 #ifndef OILSPILL_CURRENTCOMPONENT_H
 #define OILSPILL_CURRENTCOMPONENT_H

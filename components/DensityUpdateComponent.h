@@ -2,7 +2,7 @@
 // Created by Mateusz Święszek on 17/08/2020.
 //
 #include "OilPointComponent.h"
-#include "Configurations.h"
+#include "core/Configurations.h"
 #include <iostream>
 
 #ifndef OILSPILL_DENSITYUPDATECOMPONENT_H

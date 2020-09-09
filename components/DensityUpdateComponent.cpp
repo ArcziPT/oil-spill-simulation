@@ -7,8 +7,8 @@
 #include <cmath>
 
 DensityUpdateComponent::DensityUpdateComponent(std::shared_ptr<Configurations> config) {
-    this->densityAt15K = *config.initialDensityOfOilPoint;
-    this->salinity = *config.salinity;
+    this->densityAt15K = config->initialDensityOfOilPoint;
+    this->salinity = config->salinity;
     this->config = config;
 }
 
