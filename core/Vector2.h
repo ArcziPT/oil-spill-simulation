@@ -54,7 +54,7 @@ public:
 
     Quadrant getQuadrant() const;
 
-private:
+public:
     double x;
     double y;
 };
