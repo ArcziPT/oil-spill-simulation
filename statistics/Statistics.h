@@ -12,8 +12,9 @@
 #include <algorithm>
 #include <core/Configurations.h>
 #include <systems/TimeCounter.h>
-#include <core/Sea.h>
 #include "StatisticsType.h"
+
+using CellGrid = std::vector<std::vector<Cell>>;
 
 class Statistics {
 public:

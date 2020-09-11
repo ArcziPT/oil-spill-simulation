@@ -12,7 +12,7 @@ struct TimeCounter{
 
     void update(int timestep);
     void reset();
-}
+};
 
 
 #endif //OILSPILL_TIMECOUNTER_H
