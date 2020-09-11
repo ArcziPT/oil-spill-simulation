@@ -11,8 +11,8 @@
 
 struct OilPoint
 {
-	OilPoint(Vector2 &position, Configurations &config, Cell cell) : mass(config.initialMassOfOilPoint), massOfEmulsion(config.initialMassOfOilPoint),
-																					position(position), density(TemperatureDependency.calculateOilDensity(config.initialDensityOfOilPoint, cell.getTemperature())),
+	OilPoint(Vector2 &position, Configurations &config, double cellTeamperature) : mass(config.initialMassOfOilPoint), massOfEmulsion(config.initialMassOfOilPoint),
+																					position(position), density(TemperatureDependency::calculateOilDensity(config.initialDensityOfOilPoint, cellTeamperature)),
 																					viscosity(config.viscosity), components(config.oilComponents), config(config) {}
 
 	double getEvaporatedRatio();
