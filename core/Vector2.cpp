@@ -123,3 +123,11 @@ Vector2::Quadrant Vector2::getQuadrant() const
             return Quadrant::SECOND;
     }
 }
+
+double Vector2::getX() const {
+    return x;
+}
+
+double Vector2::getY() const {
+    return y;
+}

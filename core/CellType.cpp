@@ -2,6 +2,10 @@
 
 #include <cmath>
 
+bool Color::operator==(const Color &color) const {
+    return r == color.r && g == color.g && b == color.b;
+}
+
 static TypeInfo SEA(0, Color(0, 255, 255));
 static TypeInfo LAND(8760.0, Color(0, 255, 0));
 static TypeInfo FRAME(0.0, Color(255, 255, 255));
@@ -16,7 +20,11 @@ static TypeInfo SHELTERED_ROCK_SHORE(8760.0, Color(220, 220, 220));
 static TypeInfo SHELTERED_TIDE_FLAT(8760.0, Color(123, 134, 22));
 static TypeInfo SHELTERED_MARSH(8760.0, Color(123, 33, 22));
 
-double TypeInfo::rateConstant()
+double TypeInfo::rateConstant() const
 {
     return (double)(std::log(2) / (halfTime * 3600));
+}
+
+bool TypeInfo::operator==(const TypeInfo &type) const {
+    return this->halfTime == type.halfTime && this->color == type.color;
 }

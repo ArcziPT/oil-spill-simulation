@@ -21,12 +21,12 @@ public:
     CellGrid getCells();
     Statistics getStatistics();
 
-    //void setOil(double[][] array);
-    //double[][] getOil();
+    void setOil(const GridValuesType& array);
+    GridValuesType getOil();
 
-    // void setTemperature(double[][] array);
-    // void setWind(double[][] array);
-    // void setCurrent(double[][] array);
+    void setTemperature(const GridValuesType& array);
+    void setWind(const GridValuesType& array);
+    void setCurrent(const GridValuesType& array);
 
     void initialize();
     void reset();
