@@ -15,7 +15,7 @@ void CurrentScheduler::update(int iteration)
     }
 }
 
-CurrentScheduler::CurrentScheduler(SeaPtr sea) : Scheduler(sea)
+CurrentScheduler::CurrentScheduler(std::shared_ptr<Sea> sea) : Scheduler(sea)
 {
 
 }

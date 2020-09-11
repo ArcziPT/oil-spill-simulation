@@ -6,7 +6,7 @@
 
 void TemperatureScheduler::add(int iteration, GridValuesType &array)
 {
-    if ((array.size() + 2) != sea->getCells().size() || (array[0].size() + 2) != sea->getCells().length) {
+    if ((array.size() + 2) != sea->getCells().size() || (array[0].size() + 2) != sea->getCells().size()) {
         throw InconsistentSizeException();
     }
     bool present = (map.find(iteration) != map.end());
@@ -26,7 +26,7 @@ void TemperatureScheduler::update(int iteration)
     }
 }
 
-TemperatureScheduler::TemperatureScheduler(SeaPtr sea) : Scheduler(sea)
+TemperatureScheduler::TemperatureScheduler(std::shared_ptr<Sea> sea) : Scheduler(sea)
 {
 
 }

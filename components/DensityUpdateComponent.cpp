@@ -6,10 +6,9 @@
 #include <iostream>
 #include <cmath>
 
-DensityUpdateComponent::DensityUpdateComponent(std::shared_ptr<Configurations> config) {
-    this->densityAt15K = config->initialDensityOfOilPoint;
-    this->salinity = config->salinity;
-    this->config = config;
+DensityUpdateComponent::DensityUpdateComponent(Configurations& config): config(config) {
+    this->densityAt15K = config.initialDensityOfOilPoint;
+    this->salinity = config.salinity;
 }
 
 double &DensityUpdateComponent::calculateDensity(const double &tempAtK) {
@@ -40,7 +39,7 @@ double &DensityUpdateComponent::calculateWaterDensity(const double &tempAtk) {
 }
 
 void
-DensityUpdateComponent::update(std::shared_ptr<Cell> cell, std::vector<OilPoint>::iterator it, const int &timestep) {
+DensityUpdateComponent::update(Cell& cell, std::vector<OilPoint>::iterator it, const int &timestep) {
 
     OilPoint oilPoint = *(it+1);
     double emulsification = (oilPoint.massOfEmulsion - oilPoint.mass) / oilPoint.massOfEmulsion;

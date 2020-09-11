@@ -15,10 +15,10 @@ class CurrentComponent: public OilPointComponent {
 private:
     static const long serialVersionUID = -1447627012567202701L;
     double currentParameter = 1.1;
-    std::shared_ptr<Configurations> config;
+    Configurations& config;
 public:
-    CurrentComponent(std::shared_ptr<Configurations> config);
-    void update(std::shared_ptr<Cell> cell, std::vector<OilPoint>::iterator it,const int &timestep) override;
+    CurrentComponent(Configurations& config);
+    void update(Cell& cell, std::vector<OilPoint>::iterator it,const int &timestep) override;
 };
 
 

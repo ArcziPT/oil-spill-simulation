@@ -13,8 +13,7 @@
 #include <core/Configurations.h>
 #include <systems/TimeCounter.h>
 #include "StatisticsType.h"
-
-using CellGrid = std::vector<std::vector<Cell>>;
+#include "core/Cell.h"
 
 class Statistics {
 public:
@@ -33,18 +32,18 @@ public:
 
 private:
 
-    std::map<AxisInfo, std::vector<double>*> typeListMap{};// = new EnumMap<>(StatisticType.class);
-    std::unordered_map<int, long> itTimeMap{};
-    std::vector<double> oilPointsNumberList{};
-    std::vector<double> oilMassList{};
-    std::vector<double> emulsionMassList{};
-    std::vector<double> emulsificationList{};
-    std::vector<double> evaporatedMassList{};
-    std::vector<double> dispersedMassList{};
-    std::vector<double> densityList{};
-    std::vector<double> viscosityList{};
-    std::vector<std::vector<double>> componentsFractionList{};
-    std::vector<double> areaList{};
+    std::map<long, std::vector<double>*> typeListMap;// long = axisinfo.id
+    std::map<int, long> itTimeMap;
+    std::vector<double> oilPointsNumberList;
+    std::vector<double> oilMassList;
+    std::vector<double> emulsionMassList;
+    std::vector<double> emulsificationList;
+    std::vector<double> evaporatedMassList;
+    std::vector<double> dispersedMassList;
+    std::vector<double> densityList;
+    std::vector<double> viscosityList;
+    std::vector<std::vector<double>> componentsFractionList;
+    std::vector<double> areaList;
     long actualTime = 0;
     int rows, cols;
     int numberOfComponents = 0;

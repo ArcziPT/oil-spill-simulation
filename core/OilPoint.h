@@ -5,13 +5,12 @@
 #include "OilComponent.h"
 #include "Configurations.h"
 #include "Vector2.h"
-#include "Cell.h"
 
 #include <vector>
 
 struct OilPoint
 {
-	OilPoint(Vector2 &position, Configurations &config, double cellTeamperature) : mass(config.initialMassOfOilPoint), massOfEmulsion(config.initialMassOfOilPoint),
+	OilPoint(const Vector2 &position, Configurations &config, double cellTeamperature) : mass(config.initialMassOfOilPoint), massOfEmulsion(config.initialMassOfOilPoint),
 																					position(position), density(TemperatureDependency::calculateOilDensity(config.initialDensityOfOilPoint, cellTeamperature)),
 																					viscosity(config.viscosity), components(config.oilComponents), config(config) {}
 

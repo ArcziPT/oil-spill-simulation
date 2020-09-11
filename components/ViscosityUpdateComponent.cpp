@@ -5,9 +5,9 @@
 #include "ViscosityUpdateComponent.h"
 #include <cmath>
 
-ViscosityUpdateComponent::ViscosityUpdateComponent(Configurations config) { this->config = config; }
+ViscosityUpdateComponent::ViscosityUpdateComponent(Configurations& config): config(config) {}
 
-void ViscosityUpdateComponent::update(std::shared_ptr<Cell> cell, std::vector<OilPoint>::iterator it,
+void ViscosityUpdateComponent::update(Cell& cell, std::vector<OilPoint>::iterator it,
                                       const int &timestep) {
     it += 1;
     double actualVis = it->viscosity;

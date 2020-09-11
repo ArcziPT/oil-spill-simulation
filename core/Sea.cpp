@@ -1,21 +1,30 @@
 #include "Sea.h"
+#include <memory>
+#include "systems/SPreadingSystem.h"
+#include "systems/ReEntairedSystem.h"
+#include "systems/OilPointComponentSystem.h"
+#include "systems/ChangeSquareSystem.h"
 
 Sea::Sea(Configurations &config) : config(config), rows(config.rows), cols(config.cols),
-                                   cells(rows, std::vector<Cell>(cols)),
-                                   timeCounter(), statistics(config), schedulersController(this)
+                                   cells(),
+                                   timeCounter(), statistics(config), schedulersController(std::make_shared<SchedulersController>(getSea()))
 {
     initSystems();
     initialize();
 }
 
- void Sea::initSystems(){
-     systems.add(new SpreadingSystem(cells, config, timeCounter));
-     systems.add(new ReEntairedSystem(cells, config));
-     systems.add(new OilPointComponentsSystem(this, config));
-     systems.add(new ChangeSquareSystem(cells, config));
+std::shared_ptr<Sea> Sea::getSea() { 
+	return shared_from_this(); 
+}
+
+void Sea::initSystems(){
+     systems.push_back(std::unique_ptr<OilSystem>(new SpreadingSystem(cells, config, timeCounter)));
+     systems.push_back(std::unique_ptr<OilSystem>(new ReEntairedSystem(cells, config)));
+     systems.push_back(std::unique_ptr<OilSystem>(new OilPointComponentsSystem(getSea(), config)));
+     systems.push_back(std::unique_ptr<OilSystem>(new ChangeSquareSystem(cells, config)));
  }
 
-SchedulersController Sea::getSchedulersController()
+std::shared_ptr<SchedulersController> Sea::getSchedulersController()
 {
     return schedulersController;
 }
@@ -25,7 +34,7 @@ TimeCounter Sea::getTimeCounter()
     return timeCounter;
 }
 
-CellGrid Sea::getCells()
+CellGrid& Sea::getCells()
 {
     return cells;
 }
@@ -65,7 +74,7 @@ void Sea::setTemperature(const GridValuesType& array)
     {
         for (int j = 1; j < cols - 1; j++)
         {
-            cells[i][j].setTemperature(array[i - 1][j - 1]);
+            cells[i][j].temperature = (array[i - 1][j - 1]);
         }
     }
 }
@@ -76,7 +85,7 @@ void Sea::setWind(const GridValuesType& array)
     {
         for (int j = 1; j < cols - 1; j++)
         {
-            cells[i][j].setWind(Vector2(array[i - 1][2 * j - 2], array[i - 1][2 * j - 1]));
+            cells[i][j].wind = (Vector2(array[i - 1][2 * j - 2], array[i - 1][2 * j - 1]));
         }
     }
 }
@@ -87,9 +96,9 @@ void Sea::setCurrent(const GridValuesType& array)
     {
         for (int j = 1; j < cols - 1; j++)
         {
-            if (cells[i][j].getType() == CellType::SEA)
+            if (cells[i][j].type == CellType::SEA)
             {
-                cells[i][j].setCurrent(Vector2(array[i - 1][2 * j - 2], array[i - 1][2 * j - 1]));
+                cells[i][j].current = (Vector2(array[i - 1][2 * j - 2], array[i - 1][2 * j - 1]));
             }
         }
     }
@@ -107,7 +116,7 @@ void Sea::initialize()
             cells[i][j] = Cell(i, j, config);
             if (i == 0 || i == rows - 1 || j == 0 || j == cols - 1)
             {
-                cells[i][j].setType(CellType::FRAME);
+                cells[i][j].type = (CellType::FRAME);
             }
         }
     }
@@ -121,26 +130,26 @@ void Sea::reset()
 
 void Sea::update()
 {
-    if (timeCounter.getTotalTime() > config.getSimulationTime())
+    if (timeCounter.totalTime > config.simulationTime)
     {
         setFinished(true);
         return;
     }
 
-    int timestep = config.getTimestep();
+    int timestep = config.timestep;
 
-    if (timeCounter.getIteration() == 0)
+    if (timeCounter.iteration == 0)
     {
         statistics.initialize(timeCounter, cells);
     }
 
-    for (OilSystem system : systems)
+    for (auto& system : systems)
     {
-        system.update(timestep);
+        system->update(timestep);
     }
     timeCounter.update(timestep);
     statistics.update(timeCounter, cells);
-    schedulersController.update(timeCounter.getIteration());
+    schedulersController->update(timeCounter.iteration);
 }
 
 bool Sea::isFinished()

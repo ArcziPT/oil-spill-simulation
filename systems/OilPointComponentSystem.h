@@ -8,17 +8,18 @@
 
 #include <core/Sea.h>
 #include "OilSystem.h"
+#include "components/OilPointComponent.h"
 
-class OilPointComponentsSystem: public OilSystem {
+class OilPointComponentsSystem : public OilSystem {
 public:
-    OilPointComponentsSystem(Sea& sea, Configurations& config);
+    OilPointComponentsSystem(std::shared_ptr<Sea> sea, Configurations& config);
 
     void update(int timestep) override;
 
 private:
-    std::vector<OilPointComponent> oilComponents{};
-    CellGrid cells;
-}
+    std::vector<std::unique_ptr<OilPointComponent>> oilComponents{};
+    CellGrid &cells;
+};
 
 
 #endif //OILSPILL_OILPOINTCOMPONENTSYSTEM_H

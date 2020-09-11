@@ -27,7 +27,7 @@ void OilScheduler::add(int iteration, GridValuesType &array)
     map[iteration] = array;
 }
 
-OilScheduler::OilScheduler(SeaPtr sea) : Scheduler(sea)
+OilScheduler::OilScheduler(std::shared_ptr<Sea> sea) : Scheduler(sea)
 {
 
 }

@@ -10,10 +10,10 @@
 class ViscosityUpdateComponent: public OilPointComponent {
 private:
     static const long serialVersionUID = 6301560017261177982L;
-    Configurations config;
+    Configurations& config;
 public:
-    ViscosityUpdateComponent(Configurations config);
-    void update(std::shared_ptr<Cell> cell, std::vector<OilPoint>::iterator it,const int &timestep) override;
+    ViscosityUpdateComponent(Configurations& config);
+    void update(Cell& cell, std::vector<OilPoint>::iterator it,const int &timestep) override;
 
 };
 

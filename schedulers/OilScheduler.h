@@ -11,7 +11,7 @@
 class OilScheduler: public Scheduler
 {
 public:
-    OilScheduler(SeaPtr sea);
+    OilScheduler(std::shared_ptr<Sea> sea);
     void update(int iteration) override;
     void add(int iteration, GridValuesType &array) override;
 };

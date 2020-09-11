@@ -26,7 +26,7 @@ void WindScheduler::update(int iteration)
     }
 }
 
-WindScheduler::WindScheduler(SeaPtr sea) : Scheduler(sea)
+WindScheduler::WindScheduler(std::shared_ptr<Sea> sea) : Scheduler(sea)
 {
 
 }

@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-std::unique_ptr<Vector2> Vector2::ZERO = std::make_unique<Vector2>(0, 0);
+std::unique_ptr<Vector2> Vector2::ZERO = std::unique_ptr<Vector2>(new Vector2(0, 0));
 
 Vector2 Vector2::operator+(const Vector2 &vec) const
 {

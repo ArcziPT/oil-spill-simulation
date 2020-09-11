@@ -47,8 +47,8 @@ void SpreadingSystem::updatePair(Cell &cell1, Cell &cell2, int timestep, double 
     double oilDensity = (mass1 * cell1.getDensity() + mass2 * cell2.getDensity()) / (mass1 + mass2);
     double temperature = (cell1.temperature + cell2.temperature) / 2;
     double salinity = config.salinity;
-    double waterDensity = TemperatureDependency.calculateWaterDensity(temperature, salinity);
-    double kinematicWaterViscosity = TemperatureDependency.calculateWaterDynamicViscosity(temperature, salinity) / waterDensity;
+    double waterDensity = TemperatureDependency::calculateWaterDensity(temperature, salinity);
+    double kinematicWaterViscosity = TemperatureDependency::calculateWaterDynamicViscosity(temperature, salinity) / waterDensity;
     double time = timeSystem.totalTime + timestep / 2.;
     double delta = (waterDensity - oilDensity) / waterDensity;
     double base = (g * delta * volume * volume) / (std::sqrt(kinematicWaterViscosity));
@@ -104,7 +104,7 @@ void SpreadingSystem::updatePair(Cell &cell1, Cell &cell2, int timestep, double 
                 points.push_back(from->oilPoints[i]);
         }
 
-        from->oilPoints = points;
+        from->oilPoints = std::move(points);
     }
 }
 
