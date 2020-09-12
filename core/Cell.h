@@ -41,4 +41,7 @@ struct Cell
     Configurations &config;
 };
 
+typedef std::vector<std::vector<Cell>> CellGrid;
+typedef std::vector<std::vector<double>> GridValuesType;
+
 #endif

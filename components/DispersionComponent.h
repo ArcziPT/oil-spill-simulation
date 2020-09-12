@@ -9,14 +9,14 @@
 #define OILSPILL_DISPERSIONCOMPONENT_H
 
 
-class DispersionComponent : OilPointComponent {
+class DispersionComponent : public OilPointComponent {
 private:
     static const long serialVersionUID = -246278455590877923L;
-    std::shared_ptr<Configurations> config;
+    Configurations& config;
 public:
-    DispersionComponent(std::shared_ptr<Configurations> config);
+    DispersionComponent(Configurations& config);
 
-    void update(std::shared_ptr<Cell> cell, std::vector<OilPoint>::iterator it, const int &timestep) override;
+    void update(Cell& cell, std::vector<OilPoint>::iterator it, const int &timestep) override;
 };
 
 

@@ -4,14 +4,18 @@
 
 #include "OilPointComponentSystem.h"
 
-OilPointComponentsSystem::OilPointComponentsSystem(Sea &sea, Configurations &config) {
-    oilcomponents.push_back(EvaporationComponent(config));
-    oilcomponents.push_back(EmulsificationComponent(config));
-    oilcomponents.push_back(DispersionComponent(config));
-    oilcomponents.push_back(DensityUpdateComponent(config));
-    oilcomponents.push_back(ViscosityUpdateComponent(config));
+#include "components/EvaporationComponent.h"
+#include "components/EmulsificationComponent.h"
+#include "components/DispersionComponent.h"
+#include "components/DensityUpdateComponent.h"
+#include "components/ViscosityUpdateComponent.h"
 
-    cells = sea.getCells();
+OilPointComponentsSystem::OilPointComponentsSystem(std::shared_ptr<Sea> sea, Configurations &config): cells(sea->getCells()) {
+    oilComponents.push_back(std::unique_ptr<OilPointComponent>(new EvaporationComponent(config)));
+    oilComponents.push_back(std::unique_ptr<OilPointComponent>(new EmulsificationComponent(config)));
+    oilComponents.push_back(std::unique_ptr<OilPointComponent>(new DispersionComponent(config)));
+    oilComponents.push_back(std::unique_ptr<OilPointComponent>(new DensityUpdateComponent(config)));
+    oilComponents.push_back(std::unique_ptr<OilPointComponent>(new ViscosityUpdateComponent(config)));
 }
 
 //TODO
@@ -19,12 +23,12 @@ void OilPointComponentsSystem::update(int timestep) {
     int rows = cells.size();
     int cols = cells[0].size();
 
-    for (auto& com : oilcomponents) {
+    for (auto& com : oilComponents) {
         for (int i = 1; i < rows - 1; i++) {
             for (int j = 1; j < cols - 1; j++) {
                 auto& cell = cells[i][j];
-                for (auto& op : cell.oilPoints) {
-                    com.update(cell, op, timestep);
+                for (auto it = cell.oilPoints.begin(); it != cell.oilPoints.end(); it++) {
+                    com->update(cell, it, timestep);
                 }
             }
         }

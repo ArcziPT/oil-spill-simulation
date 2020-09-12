@@ -11,7 +11,7 @@
 class CurrentScheduler: public Scheduler
 {
 public:
-    CurrentScheduler(SeaPtr sea);
+    CurrentScheduler(std::shared_ptr<Sea> sea);
     void add(int iteration, GridValuesType &array) override;
     void update(int iteration) override;
 };

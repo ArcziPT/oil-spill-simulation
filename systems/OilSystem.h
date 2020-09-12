@@ -6,6 +6,7 @@
 #define OILSPILL_OILSYSTEM_H
 
 class OilSystem{
+public:
     virtual void update(int timestep) = 0;
 };
 

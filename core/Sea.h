@@ -6,19 +6,27 @@
 
 #include <memory>
 #include <vector>
-#include <schedulers/SchedulersController.h>
+#include <vector>
+#include "systems/TimeCounter.h"
+#include "statistics/Statistics.h"
+#include "schedulers/SchedulersController.h"
+#include "systems/OilSystem.h"
+
+class SchedulersController;
 
 using CellGrid = std::vector<std::vector<Cell>>;
 typedef std::vector<std::vector<double>> GridValuesType;
 
-class Sea
+class Sea : public std::enable_shared_from_this<Sea>
 {
 public:
     Sea(Configurations &config);
+    
+    std::shared_ptr<Sea> getSea();
 
-    SchedulersController getSchedulersController();
+    std::shared_ptr<SchedulersController> getSchedulersController();
     TimeCounter getTimeCounter();
-    CellGrid getCells();
+    CellGrid& getCells();
     Statistics getStatistics();
 
     void setOil(const GridValuesType& array);
@@ -42,15 +50,13 @@ private:
     Configurations &config;
     TimeCounter timeCounter;
     Statistics statistics;
-    //Set<OilSystem> systems = new LinkedHashSet<>();
-    SchedulersController schedulersController;
+    std::vector<std::unique_ptr<OilSystem>> systems;
+    std::shared_ptr<SchedulersController> schedulersController;
     int cols;
     int rows;
     bool finished = false;
 
     void initSystems();
 };
-
-typedef shared_ptr<Sea> SeaPtr;
 
 #endif

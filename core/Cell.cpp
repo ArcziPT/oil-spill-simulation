@@ -216,7 +216,7 @@ void Cell::setOil(double mass)
  		auto x = (double)((col + dist(mt)) * config.cellSize);
  		auto y = (double)((row + dist(mt)) * config.cellSize);
 
- 		oilPoints.push_back(OilPoint(Vector2(x, y), config, *this));
+ 		oilPoints.push_back(OilPoint(Vector2(x, y), config, this->temperature));
  	}
  }
 

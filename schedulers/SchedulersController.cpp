@@ -9,7 +9,7 @@
 #include "OilScheduler.h"
 #include "TemperatureScheduler.h"
 
-SchedulersController::SchedulersController(SeaPtr _sea): sea(_sea)
+SchedulersController::SchedulersController(std::shared_ptr<Sea> _sea): sea(_sea)
 {
 
 }
@@ -22,8 +22,7 @@ SchedulerMap &SchedulersController::getSchedulersMap()
 void SchedulersController::update(int iteration)
 {
     for (auto& it : this->schedulersMap) {
-        std::unique_ptr<Scheduler>& scheduler = it.second;
-        scheduler->update(iteration);
+        it.second->update(iteration);
     }
 }
 

@@ -7,22 +7,23 @@
 
 #include <unordered_map>
 #include <vector>
-#include <core/Sea.h>
-#include <exceptions.h>
+#include "core/Sea.h"
+#include "exceptions.h"
 
+using GridValuesType = std::vector<std::vector<double>>;
+class Sea;
 
 class Scheduler
 {
 protected:
     std::unordered_map<int, GridValuesType> map;
-    SeaPtr sea;
+    std::shared_ptr<Sea> sea;
     
 public:
-    Scheduler(SeaPtr _sea);
+    Scheduler(std::shared_ptr<Sea> _sea);
     virtual void add(int iteration, GridValuesType& array) = 0;
     void remove(int iteration);
     virtual void update(int iteration) = 0;
 };
-
 
 #endif //OIL_SPILL_SIMULATION_SCHEDULER_H

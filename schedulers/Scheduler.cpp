@@ -4,7 +4,7 @@
 
 #include "Scheduler.h"
 
-Scheduler::Scheduler(SeaPtr _sea): sea(_sea)
+Scheduler::Scheduler(std::shared_ptr<Sea> _sea): sea(_sea)
 {
 
 }

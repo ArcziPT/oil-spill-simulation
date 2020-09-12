@@ -11,7 +11,7 @@
 class TemperatureScheduler: public Scheduler
 {
 public:
-    TemperatureScheduler(SeaPtr sea);
+    TemperatureScheduler(std::shared_ptr<Sea>sea);
     void add(int iteration, GridValuesType &array) override;
     void update(int iteration) override;
 };

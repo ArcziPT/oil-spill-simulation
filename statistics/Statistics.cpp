@@ -6,7 +6,7 @@
 
 Statistics::Statistics(Configurations& config): rows(config.rows), cols(config.cols),
                                     numberOfComponents(config.oilComponents.size()),
-                                    cellArea(config.cellSize*config.cellSize) {
+                                    cellArea(config.cellSize*config.cellSize){
     initializeTypeListMap();
 }
 
@@ -19,29 +19,34 @@ long Statistics::getTime() {
 }
 
 double Statistics::getLastValue(AxisInfo& cT) {
-    auto& list = *typeListMap[cT];
+    auto& list = *typeListMap[cT.id];
     return list[list.size() - 1];
 }
 
 std::vector<double> Statistics::getAllValues(AxisInfo& cT) {
-    auto list = typeListMap[cT];
+    auto list = typeListMap[cT.id];
     return *list;
 }
 
 std::vector<long> Statistics::getTimeList() {
-    auto result = std::vector<long>(itTimeMap.begin(), itTimeMap.end());
+    std::vector<long> result{};
+    
+    for(auto& it : itTimeMap){
+    	result.push_back(it.second);
+    }
+    
     std::sort(result.begin(), result.end());
     return result;
 }
 
 void Statistics::initializeTypeListMap() {
-    typeListMap.insert({StatisticsType::MASS, &oilMassList});
-    typeListMap.insert({StatisticsType::DENSITY, &densityList});
-    typeListMap.insert({StatisticsType::EMULSIFICATION, &emulsificationList});
-    typeListMap.insert({StatisticsType::EVAPORATION, &evaporatedMassList});
-    typeListMap.insert({StatisticsType::VISCOSITY, &viscosityList});
-    typeListMap.insert({StatisticsType::DISPERSED_MASS, &dispersedMassList});
-    typeListMap.insert({StatisticsType::AREA, &areaList});
+    typeListMap.insert({StatisticsType::MASS.id, &oilMassList});
+    typeListMap.insert({StatisticsType::DENSITY.id, &densityList});
+    typeListMap.insert({StatisticsType::EMULSIFICATION.id, &emulsificationList});
+    typeListMap.insert({StatisticsType::EVAPORATION.id, &evaporatedMassList});
+    typeListMap.insert({StatisticsType::VISCOSITY.id, &viscosityList});
+    typeListMap.insert({StatisticsType::DISPERSED_MASS.id, &dispersedMassList});
+    typeListMap.insert({StatisticsType::AREA.id, &areaList});
 }
 
 void Statistics::initialize(TimeCounter timeCounters, CellGrid& cellGrid) {

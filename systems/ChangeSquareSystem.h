@@ -8,8 +8,6 @@
 #include <core/Cell.h>
 #include "OilSystem.h"
 
-using CellGrid = std::vector<std::vector<Cell>>;
-
 class ChangeSquareSystem: public OilSystem{
 public:
     ChangeSquareSystem(CellGrid& cells, Configurations& config): cells(cells), config(config) {}

@@ -14,7 +14,7 @@
 
 class SpreadingSystem : public OilSystem {
 public:
-    SpreadingSystem(const CellGrid &cells, Configurations &config, const TimeCounter &timeSystem) : size(config.cellSize),
+    SpreadingSystem(CellGrid &cells, Configurations &config, TimeCounter &timeSystem) : size(config.cellSize),
                                                                                                     cells(cells),
                                                                                                     config(config),
                                                                                                     timeSystem(timeSystem) {}
@@ -27,9 +27,9 @@ private:
     double calculateTotalVolume();
 
     double size;
-    CellGrid cells;
+    CellGrid &cells;
     Configurations &config;
-    TimeCounter timeSystem;
+    TimeCounter &timeSystem;
     constexpr static const double g = 9.81;
 };
 

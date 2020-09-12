@@ -15,15 +15,15 @@ private:
     static const long serialVersionUID = 7611614141616125901L;
     double densityAt15K;
     double salinity;
-    std::shared_ptr<Configurations> config;
+    Configurations& config;
 
 public:
-    DensityUpdateComponent(std::shared_ptr<Configurations> config);
-    void update(std::shared_ptr<Cell> cell, std::vector<OilPoint>::iterator it,const int &timestep) override;
-    double &calculateWaterDensity(const double &tempAtk);
+    DensityUpdateComponent(Configurations& config);
+    void update(Cell& cell, std::vector<OilPoint>::iterator it,const int &timestep) override;
+    double calculateWaterDensity(const double &tempAtk);
 
 private:
-    double &calculateDensity(const double &tempAtK);
+    double calculateDensity(const double &tempAtK);
 };
 
 

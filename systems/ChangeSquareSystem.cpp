@@ -28,7 +28,7 @@ void ChangeSquareSystem::update(int timestep) {
                 newPoints.push_back(cell.oilPoints[k]);
             }
 
-            cell.oilPoints = newPoints;
+            cell.oilPoints = std::move(newPoints);
         }
     }
 }

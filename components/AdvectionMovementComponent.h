@@ -12,11 +12,11 @@ class AdvectionMovementComponent: public OilPointComponent {
 private:
     static const long serialVersionUID = -1653011884245706960L;
     double cellSize;
-    std::shared_ptr<Configurations> config;
+    Configurations& config;
 
 public:
-    AdvectionMovementComponent(std::shared_ptr<Configurations> config);
-    void update(std::shared_ptr<Cell> cell, std::vector<OilPoint>::iterator it,const int &timestep) override;
+    AdvectionMovementComponent(Configurations& config);
+    void update(Cell& cell, std::vector<OilPoint>::iterator it,const int &timestep) override;
 
 
 };

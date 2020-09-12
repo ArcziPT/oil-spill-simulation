@@ -8,10 +8,11 @@
 #include <string>
 
 struct AxisInfo{
+    long id;
     std::string xAxis;
     std::string yAxis;
 
-    AxisInfo(const std::string& xAxis, const std::string& yAxis): xAxis(xAxis), yAxis(yAxis) {}
+    AxisInfo(long id, const std::string& xAxis, const std::string& yAxis): id(id), xAxis(xAxis), yAxis(yAxis) {}
 };
 
 struct StatisticsType{

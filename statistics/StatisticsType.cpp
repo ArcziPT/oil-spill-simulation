@@ -4,10 +4,10 @@
 
 #include "StatisticsType.h"
 
-static AxisInfo MASS("time [h]", "kg");
-static AxisInfo DENSITY("time [h]", "kg/m^3");
-static AxisInfo EMULSIFICATION("time [h]", "%");
-static AxisInfo EVAPORATION("time [h]", "kg");
-static AxisInfo VISCOSITY("time [h]", "cP");
-static AxisInfo DISPERSED_MASS("time [h]", "kg");
-static AxisInfo AREA("time [h]", "m^2");
+AxisInfo StatisticsType::MASS(1, "time [h]", "kg");
+AxisInfo StatisticsType::DENSITY(2, "time [h]", "kg/m^3");
+AxisInfo StatisticsType::EMULSIFICATION(3, "time [h]", "%");
+AxisInfo StatisticsType::EVAPORATION(4, "time [h]", "kg");
+AxisInfo StatisticsType::VISCOSITY(5, "time [h]", "cP");
+AxisInfo StatisticsType::DISPERSED_MASS(6, "time [h]", "kg");
+AxisInfo StatisticsType::AREA(7, "time [h]", "m^2");

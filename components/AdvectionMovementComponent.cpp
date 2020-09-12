@@ -7,12 +7,11 @@
 #include "core/Vector2.h"
 #include "core/OilPoint.h"
 
-AdvectionMovementComponent::AdvectionMovementComponent(std::shared_ptr<Configurations> config) {
-    this->cellSize = config->cellSize;
-    this->config = config;
+AdvectionMovementComponent::AdvectionMovementComponent(Configurations& config): config(config) {
+    this->cellSize = config.cellSize;
 }
 
-void AdvectionMovementComponent::update(std::shared_ptr<Cell> cell, std::vector<OilPoint>::iterator it,
+void AdvectionMovementComponent::update(Cell& cell, std::vector<OilPoint>::iterator it,
                                         const int &timestep) {
     it += 1;
     it->velocity *= timestep;

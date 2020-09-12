@@ -58,8 +58,7 @@ double TemperatureDependency::calculateWaterDynamicViscosity(double T, double S)
     S = S / 1000;
     T -= 273.15;
 
-    double[]
-    a = {
+    double a[] = {
             0.0,
             1.5700386464E-01,
             6.4992620050E+01,

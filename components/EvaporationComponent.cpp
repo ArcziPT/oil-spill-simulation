@@ -6,14 +6,12 @@
 #include <cmath>
 #include <vector>
 
-EvaporationComponent::EvaporationComponent(std::shared_ptr<Configurations> config) {
-    this->config = config;
-}
+EvaporationComponent::EvaporationComponent(Configurations& config): config(config) {}
 
-void EvaporationComponent::update(std::shared_ptr<Cell> cell, std::vector<OilPoint>::iterator it,
+void EvaporationComponent::update(Cell& cell, std::vector<OilPoint>::iterator it,
                                   const int &timestep) {
     it += 1;
-    double temp = cell->getTemperature();
+    double temp = cell.temperature;
     std::vector<OilComponent> components = it->components;
     std::vector<double> lossMassArray;
 
@@ -35,7 +33,7 @@ void EvaporationComponent::update(std::shared_ptr<Cell> cell, std::vector<OilPoi
             double P = (double) (100000 * std::exp(A)); // Vapor pressure
             // [Pa]
             double lossmass = (K * molecularWeigth * P * x / (R * temp)
-                               * timestep * (config->cellSize * config->cellSize)) / cell->getOilPoints().size();
+                               * timestep * (config.cellSize * config.cellSize)) / cell.oilPoints.size();
             lossMassArray.push_back(lossmass);
         } else {
             lossMassArray.push_back(0);
@@ -71,7 +69,7 @@ void EvaporationComponent::update(std::shared_ptr<Cell> cell, std::vector<OilPoi
 
 
     } else {
-        cell->getDeletedOilPoints().push_back(*it);
+        cell.deletedOilPoints.push_back(*it);
         it->removed = true;
 
     }

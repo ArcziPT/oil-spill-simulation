@@ -16,11 +16,11 @@ public:
     void update(int timestep) override;
 
 private:
-    CellGrid cells;
+    CellGrid &cells;
     Configurations& config;
 
     void updateCell(Cell& cell, int timestep);
-}
+};
 
 
 #endif //OILSPILL_REENTAIREDSYSTEM_H
