@@ -20,10 +20,10 @@ private:
 public:
     DensityUpdateComponent(Configurations& config);
     void update(Cell& cell, std::vector<OilPoint>::iterator it,const int &timestep) override;
-    double &calculateWaterDensity(const double &tempAtk);
+    double calculateWaterDensity(const double &tempAtk);
 
 private:
-    double &calculateDensity(const double &tempAtK);
+    double calculateDensity(const double &tempAtK);
 };
 
 

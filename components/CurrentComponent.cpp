@@ -7,7 +7,7 @@
 #include "core/Vector2.h"
 #include "CurrentComponent.h"
 
-CurrentComponent::CurrentComponent(std::shared_ptr<Configurations> config): config(config) {}
+CurrentComponent::CurrentComponent(Configurations& config): config(config) {}
 
 void CurrentComponent::update(Cell& cell, std::vector<OilPoint>::iterator it, const int &timestep) {
     it += 1;

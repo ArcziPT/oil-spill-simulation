@@ -7,7 +7,7 @@
 #include "core/Vector2.h"
 #include "core/OilPoint.h"
 
-AdvectionMovementComponent::AdvectionMovementComponent(std::shared_ptr<Configurations> config): config(config) {
+AdvectionMovementComponent::AdvectionMovementComponent(Configurations& config): config(config) {
     this->cellSize = config.cellSize;
 }
 
