@@ -11,6 +11,7 @@ struct Cell
     Cell(int row, int col, Configurations &config) : row(row), col(col), config(config) {}
 
     Cell& operator=(Cell&& cell);
+    Cell(const Cell&) = default;
 
     double getOil();
     double getDensity();
