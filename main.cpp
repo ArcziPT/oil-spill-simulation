@@ -5,6 +5,7 @@
 #include <core/Configurations.h>
 #include <memory>
 #include <core/Sea.h>
+#include <iostream>
 
 int main(int argc, char** argv)
 {
@@ -33,15 +34,31 @@ int main(int argc, char** argv)
     auto sea = std::make_shared<Sea>(config);
     sea->init();
 
-    auto oil = GridValuesType(150, std::vector<double>(150, 0));
-    for(int i=0; i<150; i++){
-        for(int j=0; j<150; j++){
+    auto oil = GridValuesType(148, std::vector<double>(148, 0));
+    for(int i=0; i<148; i++){
+        for(int j=0; j<148; j++){
             oil[i][j] = i+j;
         }
     }
     sea->setOil(oil);
 
+    for(auto& row : sea->getOil()){
+        for(auto& el : row){
+            std::cout<<el<<" ";
+        }
+        std::cout<<std::endl;
+    }
+
     sea->update();
+
+    std::cout<<"##############################################################################################################################\n";
+
+    for(auto& row : sea->getOil()){
+        for(auto& el : row){
+            std::cout<<el<<" ";
+        }
+        std::cout<<std::endl;
+    }
 
     return 0;
 }

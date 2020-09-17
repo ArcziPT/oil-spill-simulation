@@ -58,11 +58,12 @@ void Sea::setOil(const GridValuesType& array)
 GridValuesType Sea::getOil()
 {
     GridValuesType array{};
-    for (int i = 1; i < rows - 1; i++)
+    for (int i = 0; i < rows; i++)
     {
-        for (int j = 1; j < cols - 1; j++)
+        array.push_back(std::vector<double>());
+        for (int j = 0; j < cols; j++)
         {
-            array[i - 1][j - 1] = cells[i][j].getOil();
+            array[i].push_back(cells[i][j].getOil());
         }
     }
     return array;
