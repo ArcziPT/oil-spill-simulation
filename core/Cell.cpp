@@ -208,13 +208,12 @@ void Cell::setOil(double mass)
  {
      std::random_device rd;
      std::mt19937 mt(rd());
-     std::uniform_int_distribution<int> dist(0, std::numeric_limits<int>::max());
+     std::uniform_real_distribution<double> dist(0, config.cellSize);
 
  	for (int i = 0; i < n; i++)
  	{
- 	    //TODO????: replace '*' with '%'
- 		auto x = (double)((col + dist(mt)) % (int)config.cellSize);
- 		auto y = (double)((row + dist(mt)) % (int)config.cellSize);
+ 		auto x = (double)(col * config.cellSize + dist(mt));
+ 		auto y = (double)(row * config.cellSize + dist(mt));
 
  		oilPoints.push_back(OilPoint(Vector2(x, y), config, this->temperature));
  	}
