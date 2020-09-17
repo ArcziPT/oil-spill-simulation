@@ -12,7 +12,7 @@
 
 class OilPointComponent {
 public:
-    virtual void update(Cell&cell, std::vector<OilPoint>::iterator it,const int &timestep) = 0;
+    virtual void update(Cell&cell, OilPoint& op, const int &timestep) = 0;
 };
 
 

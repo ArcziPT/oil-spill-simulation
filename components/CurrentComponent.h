@@ -18,7 +18,7 @@ private:
     Configurations& config;
 public:
     CurrentComponent(Configurations& config);
-    void update(Cell& cell, std::vector<OilPoint>::iterator it,const int &timestep) override;
+    void update(Cell& cell, OilPoint& op, const int &timestep) override;
 };
 
 

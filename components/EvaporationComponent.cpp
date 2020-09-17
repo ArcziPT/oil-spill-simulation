@@ -8,11 +8,9 @@
 
 EvaporationComponent::EvaporationComponent(Configurations& config): config(config) {}
 
-void EvaporationComponent::update(Cell& cell, std::vector<OilPoint>::iterator it,
-                                  const int &timestep) {
-    it += 1;
+void EvaporationComponent::update(Cell& cell, OilPoint& op, const int &timestep) {
     double temp = cell.temperature;
-    std::vector<OilComponent> components = it->components;
+    std::vector<OilComponent> components = op.components;
     std::vector<double> lossMassArray;
 
     double totalMole = 0;
@@ -39,7 +37,7 @@ void EvaporationComponent::update(Cell& cell, std::vector<OilPoint>::iterator it
             lossMassArray.push_back(0);
         }
     }
-    double actualMass = it->mass;
+    double actualMass = op.mass;
     double totalLossMass = 0;
     for (double n : lossMassArray) {
         totalLossMass += n;
@@ -60,18 +58,17 @@ void EvaporationComponent::update(Cell& cell, std::vector<OilPoint>::iterator it
     }
 
     if (newMass > 0.00001) {
-        double lastEvaporatedRatio = it->getEvaporatedRatio();
-        it->mass = newMass;
+        double lastEvaporatedRatio = op.getEvaporatedRatio();
+        op.mass = newMass;
 
-        it->evaporatedMass = it->evaporatedMass+totalLossMass;
-        it -> massOfEmulsion = it->massOfEmulsion -totalLossMass;
-        it ->lastDeltaF = it->getEvaporatedRatio() - lastEvaporatedRatio;
+        op.evaporatedMass = op.evaporatedMass+totalLossMass;
+        op.massOfEmulsion = op.massOfEmulsion -totalLossMass;
+        op.lastDeltaF = op.getEvaporatedRatio() - lastEvaporatedRatio;
 
 
     } else {
-        cell.deletedOilPoints.push_back(*it);
-        it->removed = true;
-
+        cell.deletedOilPoints.push_back(op);
+        op.removed = true;
     }
 
 }

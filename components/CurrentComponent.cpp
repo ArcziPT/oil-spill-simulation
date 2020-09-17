@@ -9,13 +9,12 @@
 
 CurrentComponent::CurrentComponent(Configurations& config): config(config) {}
 
-void CurrentComponent::update(Cell& cell, std::vector<OilPoint>::iterator it, const int &timestep) {
-    it += 1;
+void CurrentComponent::update(Cell& cell, OilPoint& op, const int &timestep) {
     Vector2 velocityOfCurrent = cell.current;
 //nie jestem pewien tego
     if (velocityOfCurrent.x != 0 && velocityOfCurrent.y != 0) {
         Vector2 tempVector2(velocityOfCurrent.x * currentParameter, (-velocityOfCurrent.y) * currentParameter);
-        it->velocity = tempVector2;
+        op.velocity = tempVector2;
     }
 }
 

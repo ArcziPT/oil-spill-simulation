@@ -39,13 +39,11 @@ double DensityUpdateComponent::calculateWaterDensity(const double &tempAtk) {
 }
 
 void
-DensityUpdateComponent::update(Cell& cell, std::vector<OilPoint>::iterator it, const int &timestep) {
-
-    auto& oilPoint = *it;
-    double emulsification = (oilPoint.massOfEmulsion - oilPoint.mass) / oilPoint.massOfEmulsion;
-    double evaporationRatio = oilPoint.getEvaporatedRatio();
+DensityUpdateComponent::update(Cell& cell, OilPoint& op, const int &timestep) {
+    double emulsification = (op.massOfEmulsion - op.mass) / op.massOfEmulsion;
+    double evaporationRatio = op.getEvaporatedRatio();
     double initialOilDensity = calculateDensity(cell.temperature);
-    oilPoint.density = (1 - emulsification)
+    op.density = (1 - emulsification)
                                  * ((0.6 * initialOilDensity - 340) * evaporationRatio + initialOilDensity) +
                                  emulsification * calculateWaterDensity(cell.temperature);
 
