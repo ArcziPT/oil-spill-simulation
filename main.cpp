@@ -25,10 +25,10 @@ int main(int argc, char** argv)
     config.minSlickThickness = 0.03;
     config.simulationTime = 1000;
     config.oilComponents = {
-            OilComponent(0.02, 45.02, 313),
-            OilComponent(0.02, 45.02, 313),
-            OilComponent(0.02, 45.02, 313),
-            OilComponent(0.02, 45.02, 313)
+            OilComponent(0.25, 45.02, 313),
+            OilComponent(0.25, 45.02, 313),
+            OilComponent(0.25, 45.02, 313),
+            OilComponent(0.25, 45.02, 313)
     };
 
     auto sea = std::make_shared<Sea>(config);
@@ -37,7 +37,7 @@ int main(int argc, char** argv)
     auto oil = GridValuesType(148, std::vector<double>(148, 0));
     for(int i=0; i<148; i++){
         for(int j=0; j<148; j++){
-            oil[i][j] = i+j;
+            oil[i][j] = 1000;
         }
     }
     sea->setOil(oil);
@@ -49,6 +49,7 @@ int main(int argc, char** argv)
         std::cout<<std::endl;
     }
 
+    sea->update();
     sea->update();
 
     std::cout<<"##############################################################################################################################\n";
