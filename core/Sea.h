@@ -17,10 +17,14 @@ class SchedulersController;
 using CellGrid = std::vector<std::vector<Cell>>;
 typedef std::vector<std::vector<double>> GridValuesType;
 
+/**
+ * Before using call init()
+ */
 class Sea : public std::enable_shared_from_this<Sea>
 {
 public:
     Sea(Configurations &config);
+    void init();
     
     std::shared_ptr<Sea> getSea();
 
@@ -55,8 +59,6 @@ private:
     int cols;
     int rows;
     bool finished = false;
-
-    void initSystems();
 };
 
 #endif

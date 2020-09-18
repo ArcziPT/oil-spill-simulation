@@ -11,15 +11,13 @@ AdvectionMovementComponent::AdvectionMovementComponent(Configurations& config): 
     this->cellSize = config.cellSize;
 }
 
-void AdvectionMovementComponent::update(Cell& cell, std::vector<OilPoint>::iterator it,
-                                        const int &timestep) {
-    it += 1;
-    it->velocity *= timestep;
+void AdvectionMovementComponent::update(Cell& cell, OilPoint& op, const int &timestep) {
+    auto offsetX = op.velocity.x * timestep;
+    auto offsetY = op.velocity.x * timestep;
 
-    if (it->velocity.x > cellSize || it->velocity.y > cellSize) {
+    if (offsetX > cellSize || offsetY > cellSize) {
         std::cout << "Za du�y krok!!!!!!" << std::endl;
     }
-    it->position += it->velocity;
-    it->velocity.zero();
-
+    op.position += Vector2(offsetX, offsetY);
+    op.velocity.zero();
 }

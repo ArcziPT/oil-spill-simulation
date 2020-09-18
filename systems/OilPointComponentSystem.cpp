@@ -27,9 +27,17 @@ void OilPointComponentsSystem::update(int timestep) {
         for (int i = 1; i < rows - 1; i++) {
             for (int j = 1; j < cols - 1; j++) {
                 auto& cell = cells[i][j];
-                for (auto it = cell.oilPoints.begin(); it != cell.oilPoints.end(); it++) {
-                    com->update(cell, it, timestep);
+                for (auto& op : cell.oilPoints) {
+                    com->update(cell, op, timestep);
                 }
+
+                //some oil points might be removed by component
+                std::vector<OilPoint> oilPoints{};
+                for(auto& op : cell.oilPoints){
+                    if(!op.removed)
+                        oilPoints.push_back(op);
+                }
+                cell.oilPoints = std::move(oilPoints);
             }
         }
     }

@@ -15,6 +15,7 @@ struct OilPoint
 																					viscosity(config.viscosity), components(config.oilComponents), config(config) {}
 
 	double getEvaporatedRatio();
+    double getEmulsification() const;
 
 	Vector2 position;
 	Vector2 velocity{0, 0};
@@ -27,6 +28,7 @@ struct OilPoint
 	double lastDeltaY = 0;
 	double viscosity;
 	double dispersedMass = 0;
+	double emulsification;
 	std::vector<OilComponent> components;
 
 	Configurations &config;
