@@ -13,8 +13,7 @@ void CurrentComponent::update(Cell& cell, OilPoint& op, const int &timestep) {
     Vector2 velocityOfCurrent = cell.current;
 //nie jestem pewien tego
     if (velocityOfCurrent.x != 0 && velocityOfCurrent.y != 0) {
-        Vector2 tempVector2(velocityOfCurrent.x * currentParameter, (-velocityOfCurrent.y) * currentParameter);
-        op.velocity = tempVector2;
+        op.velocity += Vector2(velocityOfCurrent.x * currentParameter, (-velocityOfCurrent.y) * currentParameter);
     }
 }
 

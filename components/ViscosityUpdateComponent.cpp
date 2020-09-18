@@ -10,8 +10,8 @@ ViscosityUpdateComponent::ViscosityUpdateComponent(Configurations& config): conf
 void ViscosityUpdateComponent::update(Cell& cell, OilPoint& op,
                                       const int &timestep) {
     double actualVis = op.viscosity;
-    double deltaVis = config.viscosity * actualVis * op.lastDeltaF +
+    double deltaVis = config.viscosityParameter * actualVis * op.lastDeltaF +
                       2.5 * actualVis * op.lastDeltaY /
-                      std::pow(1 + config.viscosity * ((op.massOfEmulsion - op.mass) / op.massOfEmulsion), 2);
+                      std::pow(1 + config.mousseViscosity * op.getEmulsification(), 2);
     op.viscosity = actualVis + deltaVis;
 }

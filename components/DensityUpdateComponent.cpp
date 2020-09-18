@@ -11,7 +11,7 @@ DensityUpdateComponent::DensityUpdateComponent(Configurations& config): config(c
     this->salinity = config.salinity;
 }
 
-double DensityUpdateComponent::calculateDensity(const double &tempAtK) {
+double DensityUpdateComponent::calculateDensity(double tempAtK) {
     double deltaT = tempAtK - 288.15;
     double alpha = 613.97226 / (densityAt15K * densityAt15K);
     double Kt = std::exp(-alpha * deltaT * (1 + 0.8 * alpha * deltaT));
@@ -19,8 +19,8 @@ double DensityUpdateComponent::calculateDensity(const double &tempAtK) {
     return result;
 }
 
-double DensityUpdateComponent::calculateWaterDensity(const double &tempAtk) {
-    double tempAtK = tempAtK - 273.15;
+double DensityUpdateComponent::calculateWaterDensity(double tempAtK) {
+    tempAtK -= 273.15;
     double rho = 1000 * (1.0 - (tempAtK + 288.9414)
                                / (508929.2 * (tempAtK + 68.12963))
                                * (std::pow(tempAtK - 3.9863, 2)));
@@ -40,7 +40,7 @@ double DensityUpdateComponent::calculateWaterDensity(const double &tempAtk) {
 
 void
 DensityUpdateComponent::update(Cell& cell, OilPoint& op, const int &timestep) {
-    double emulsification = (op.massOfEmulsion - op.mass) / op.massOfEmulsion;
+    double emulsification = op.getEmulsification();
     double evaporationRatio = op.getEvaporatedRatio();
     double initialOilDensity = calculateDensity(cell.temperature);
     op.density = (1 - emulsification)

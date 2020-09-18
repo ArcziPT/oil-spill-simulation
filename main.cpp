@@ -25,10 +25,10 @@ int main(int argc, char** argv)
     config.minSlickThickness = 0.03;
     config.simulationTime = 1000;
     config.oilComponents = {
-            OilComponent(0.25, 45.02, 313),
-            OilComponent(0.25, 45.02, 313),
-            OilComponent(0.25, 45.02, 313),
-            OilComponent(0.25, 45.02, 313)
+            OilComponent(0.25, 45.02/1000, 313),
+            OilComponent(0.25, 45.02/1000, 313),
+            OilComponent(0.25, 45.02/1000, 313),
+            OilComponent(0.25, 45.02/1000, 313)
     };
 
     auto sea = std::make_shared<Sea>(config);
@@ -49,7 +49,6 @@ int main(int argc, char** argv)
         std::cout<<std::endl;
     }
 
-    sea->update();
     sea->update();
 
     std::cout<<"##############################################################################################################################\n";

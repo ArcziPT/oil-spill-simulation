@@ -10,17 +10,17 @@ EvaporationComponent::EvaporationComponent(Configurations& config): config(confi
 
 void EvaporationComponent::update(Cell& cell, OilPoint& op, const int &timestep) {
     double temp = cell.temperature;
-    std::vector<OilComponent> components = op.components;
+    auto& components = op.components;
     std::vector<double> lossMassArray;
 
     double totalMole = 0;
-    for (OilComponent comp : components) {
+    for (auto& comp : components) {
         totalMole += (comp.getX() / comp.getMolecularWeight());
     }
 
     double x = 0;
-    for (OilComponent comp : components) {
-        x = comp.getX() / comp.getMolecularWeight() * totalMole;
+    for (auto& comp : components) {
+        x = comp.getX() / (comp.getMolecularWeight() * totalMole);
 
         if (x != 0) {
             double Tb = comp.getTb();
@@ -45,7 +45,7 @@ void EvaporationComponent::update(Cell& cell, OilPoint& op, const int &timestep)
 
     double newMass = actualMass - totalLossMass;
     int i = 0;
-    for (OilComponent comp : components) {
+    for (auto& comp : components) {
         double lossMass = lossMassArray[i++];
         if (lossMass > 0) {
             double newX = (comp.getX() * actualMass - lossMass) / newMass;

@@ -8,7 +8,7 @@ EmulsificationComponent::EmulsificationComponent(Configurations& config): config
 
 void EmulsificationComponent::update(Cell& cell, OilPoint& op, const int &timestep) {
     double windSpeed = cell.wind.len();
-    double Y = (op.massOfEmulsion - op.mass) / op.massOfEmulsion; //getEmulsification
+    double Y = op.getEmulsification();
     double deltaY = 2E-6 * (windSpeed + 1) * (windSpeed + 1) * (1 - Y / config.mousseViscosity)
                     * timestep;
 
