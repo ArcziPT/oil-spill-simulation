@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <random>
+#include <iostream>
 
 
 Cell& Cell::operator=(Cell &&cell) {
@@ -223,4 +224,42 @@ void Cell::addMass(double mass)
 {
 	int n = (int)(mass / config.initialMassOfOilPoint);
 	addOilPoints(n);
+}
+
+/**
+ *
+ * @param row
+ * @param col
+ * @param config
+ */
+CellGrid::CellGrid(int row, int col, Configurations &config) {
+    this->row = row;
+    this->col = col;
+    cells.reserve(row*col);
+
+    for(int i=0; i<row; i++){
+        for(int j=0; j<col; j++){
+            cells.push_back(Cell(i, j, config));
+        }
+    }
+}
+
+Cell &CellGrid::operator[](CellGrid::CellPos cellPos) {
+    return cells[cellPos.x * col + cellPos.y];
+}
+
+std::vector<Cell>::iterator CellGrid::begin() {
+    return cells.begin();
+}
+
+std::vector<Cell>::iterator CellGrid::end() {
+    return cells.end();
+}
+
+int CellGrid::getRow() const {
+    return row;
+}
+
+int CellGrid::getCol() const {
+    return col;
 }

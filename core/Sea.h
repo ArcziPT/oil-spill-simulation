@@ -14,9 +14,6 @@
 
 class SchedulersController;
 
-using CellGrid = std::vector<std::vector<Cell>>;
-typedef std::vector<std::vector<double>> GridValuesType;
-
 /**
  * Before using call init()
  */

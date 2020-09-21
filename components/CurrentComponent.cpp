@@ -7,13 +7,18 @@
 #include "core/Vector2.h"
 #include "CurrentComponent.h"
 
-CurrentComponent::CurrentComponent(Configurations& config): config(config) {}
+CurrentComponent::CurrentComponent(Configurations &config) : config(config) {}
 
-void CurrentComponent::update(Cell& cell, OilPoint& op, const int &timestep) {
-    Vector2 velocityOfCurrent = cell.current;
-//nie jestem pewien tego
-    if (velocityOfCurrent.x != 0 && velocityOfCurrent.y != 0) {
-        op.velocity += Vector2(velocityOfCurrent.x * currentParameter, (-velocityOfCurrent.y) * currentParameter);
+void CurrentComponent::update(CellGrid &cells, int timestep) {
+    for (auto &cell : cells) {
+        for (auto &op : cell.oilPoints) {
+            Vector2 velocityOfCurrent = cell.current;
+            //nie jestem pewien tego
+            if (velocityOfCurrent.x != 0 && velocityOfCurrent.y != 0) {
+                op.velocity += Vector2(velocityOfCurrent.x * currentParameter,
+                                       (-velocityOfCurrent.y) * currentParameter);
+            }
+        }
     }
 }
 

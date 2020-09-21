@@ -50,7 +50,7 @@ void Sea::setOil(const GridValuesType& array)
     {
         for (int j = 1; j < cols - 1; j++)
         {
-            cells[i][j].setOil(array[i - 1][j - 1]);
+            cells[{i, j}].setOil(array[i - 1][j - 1]);
         }
     }
 }
@@ -63,7 +63,7 @@ GridValuesType Sea::getOil()
         array.push_back(std::vector<double>());
         for (int j = 0; j < cols; j++)
         {
-            array[i].push_back(cells[i][j].getOil());
+            array[i].push_back(cells[{i, j}].getOil());
         }
     }
     return array;
@@ -75,7 +75,7 @@ void Sea::setTemperature(const GridValuesType& array)
     {
         for (int j = 1; j < cols - 1; j++)
         {
-            cells[i][j].temperature = (array[i - 1][j - 1]);
+            cells[{i, j}].temperature = (array[i - 1][j - 1]);
         }
     }
 }
@@ -86,7 +86,7 @@ void Sea::setWind(const GridValuesType& array)
     {
         for (int j = 1; j < cols - 1; j++)
         {
-            cells[i][j].wind = (Vector2(array[i - 1][2 * j - 2], array[i - 1][2 * j - 1]));
+            cells[{i, j}].wind = (Vector2(array[i - 1][2 * j - 2], array[i - 1][2 * j - 1]));
         }
     }
 }
@@ -97,9 +97,9 @@ void Sea::setCurrent(const GridValuesType& array)
     {
         for (int j = 1; j < cols - 1; j++)
         {
-            if (cells[i][j].type == CellType::SEA)
+            if (cells[{i, j}].type == CellType::SEA)
             {
-                cells[i][j].current = (Vector2(array[i - 1][2 * j - 2], array[i - 1][2 * j - 1]));
+                cells[{i, j}].current = (Vector2(array[i - 1][2 * j - 2], array[i - 1][2 * j - 1]));
             }
         }
     }
@@ -108,16 +108,14 @@ void Sea::setCurrent(const GridValuesType& array)
 void Sea::initialize()
 {
     timeCounter.reset();
-
+    cells = CellGrid(rows, cols, config);
     for (int i = 0; i < rows; i++)
     {
-        cells.push_back(std::vector<Cell>());
         for (int j = 0; j < cols; j++)
         {
-            cells[i].push_back(Cell(i, j, config));
             if (i == 0 || i == rows - 1 || j == 0 || j == cols - 1)
             {
-                cells[i][j].type = (CellType::FRAME);
+                cells[{i, j}].type = (CellType::FRAME);
             }
         }
     }

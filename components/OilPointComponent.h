@@ -12,7 +12,7 @@
 
 class OilPointComponent {
 public:
-    virtual void update(Cell&cell, OilPoint& op, const int &timestep) = 0;
+    virtual void update(CellGrid& cells, int timestep) = 0;
 };
 
 

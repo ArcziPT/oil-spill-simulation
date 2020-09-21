@@ -7,17 +7,21 @@
 #include "core/Vector2.h"
 #include "core/OilPoint.h"
 
-AdvectionMovementComponent::AdvectionMovementComponent(Configurations& config): config(config) {
+AdvectionMovementComponent::AdvectionMovementComponent(Configurations &config) : config(config) {
     this->cellSize = config.cellSize;
 }
 
-void AdvectionMovementComponent::update(Cell& cell, OilPoint& op, const int &timestep) {
-    auto offsetX = op.velocity.x * timestep;
-    auto offsetY = op.velocity.x * timestep;
+void AdvectionMovementComponent::update(CellGrid &cells, int timestep) {
+    for (auto &cell : cells) {
+        for (auto &op : cell.oilPoints) {
+            auto offsetX = op.velocity.x * timestep;
+            auto offsetY = op.velocity.x * timestep;
 
-    if (offsetX > cellSize || offsetY > cellSize) {
-        std::cout << "Za du�y krok!!!!!!" << std::endl;
+            if (offsetX > cellSize || offsetY > cellSize) {
+                std::cout << "Za du�y krok!!!!!!" << std::endl;
+            }
+            op.position += Vector2(offsetX, offsetY);
+            op.velocity.zero();
+        }
     }
-    op.position += Vector2(offsetX, offsetY);
-    op.velocity.zero();
 }

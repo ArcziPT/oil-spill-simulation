@@ -85,7 +85,7 @@ void Statistics::update(TimeCounter timeCounter, CellGrid& cellGrid) {
         auto listOfFraction = std::vector<double>(numberOfComponents, 0);
         for (int i = 1; i < rows - 1; i++) {
             for (int j = 1; j < cols - 1; j++) {
-                auto &cell = cellGrid[i][j];
+                auto &cell = cellGrid[{i, j}];
 
                 oilPoints += cell.oilPoints.size();
 

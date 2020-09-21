@@ -6,11 +6,11 @@
 
 double SpreadingSystem::calculateTotalVolume() {
     double result = 0;
-    int rows = cells.size();
-    int cols = cells[0].size();
+    int rows = cells.getRow();
+    int cols = cells.getCol();
     for (int i = 1; i < rows - 1; i++) {
         for (int j = 1; j < cols - 1; j++) {
-            auto& cell = cells[i][j];
+            auto& cell = cells[{i, j}];
             result += cell.getVolume();
         }
     }
@@ -110,30 +110,30 @@ void SpreadingSystem::updatePair(Cell &cell1, Cell &cell2, int timestep, double 
 
 void SpreadingSystem::update(int timestep) {
     double volume = calculateTotalVolume();
-    int row = cells.size();
-    int col = cells[0].size();
+    int row = cells.getRow();
+    int col = cells.getCol();
     for (int i = 1; i < row - 1; i++) {
         for (int j = 1; j < col - 2; j += 2) {
-            auto& cell1 = cells[i][j];
-            auto& cell2 = cells[i][j + 1];
+            auto& cell1 = cells[{i, j}];
+            auto& cell2 = cells[{i, j + 1}];
             updatePair(cell1, cell2, timestep, volume);
         }
         for (int j = 2; j < col - 2; j += 2) {
-            auto& cell1 = cells[i][j];
-            auto& cell2 = cells[i][j + 1];
+            auto& cell1 = cells[{i, j}];
+            auto& cell2 = cells[{i, j + 1}];
             updatePair(cell1, cell2, timestep, volume);
         }
     }
 
     for (int j = 1; j < col - 1; j++) {
         for (int i = 1; i < row - 2; i += 2) {
-            auto& cell1 = cells[i][j];
-            auto& cell2 = cells[i + 1][j];
+            auto& cell1 = cells[{i, j}];
+            auto& cell2 = cells[{i + 1, j}];
             updatePair(cell1, cell2, timestep, volume);
         }
         for (int i = 2; i < row - 2; i += 2) {
-            auto& cell1 = cells[i][j];
-            auto& cell2 = cells[i + 1][j];
+            auto& cell1 = cells[{i, j}];
+            auto& cell2 = cells[{i + 1, j}];
             updatePair(cell1, cell2, timestep, volume);
         }
     }

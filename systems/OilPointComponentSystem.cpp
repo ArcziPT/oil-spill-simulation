@@ -10,7 +10,8 @@
 #include "components/DensityUpdateComponent.h"
 #include "components/ViscosityUpdateComponent.h"
 
-OilPointComponentsSystem::OilPointComponentsSystem(std::shared_ptr<Sea> sea, Configurations &config): cells(sea->getCells()) {
+OilPointComponentsSystem::OilPointComponentsSystem(std::shared_ptr<Sea> sea, Configurations &config) : cells(
+        sea->getCells()) {
     oilComponents.push_back(std::unique_ptr<OilPointComponent>(new EvaporationComponent(config)));
     oilComponents.push_back(std::unique_ptr<OilPointComponent>(new EmulsificationComponent(config)));
     oilComponents.push_back(std::unique_ptr<OilPointComponent>(new DispersionComponent(config)));
@@ -20,25 +21,17 @@ OilPointComponentsSystem::OilPointComponentsSystem(std::shared_ptr<Sea> sea, Con
 
 //TODO
 void OilPointComponentsSystem::update(int timestep) {
-    int rows = cells.size();
-    int cols = cells[0].size();
+    for (auto &com : oilComponents) {
+        com->update(cells, timestep);
 
-    for (auto& com : oilComponents) {
-        for (int i = 1; i < rows - 1; i++) {
-            for (int j = 1; j < cols - 1; j++) {
-                auto& cell = cells[i][j];
-                for (auto& op : cell.oilPoints) {
-                    com->update(cell, op, timestep);
-                }
-
-                //some oil points might be removed by component
-                std::vector<OilPoint> oilPoints{};
-                for(auto& op : cell.oilPoints){
-                    if(!op.removed)
-                        oilPoints.push_back(op);
-                }
-                cell.oilPoints = std::move(oilPoints);
+        //some oil points might be removed by component
+        for(auto& cell : cells){
+            std::vector<OilPoint> oilPoints{};
+            for (auto &op : cell.oilPoints) {
+                if (!op.removed)
+                    oilPoints.push_back(op);
             }
+            cell.oilPoints = std::move(oilPoints);
         }
     }
 }

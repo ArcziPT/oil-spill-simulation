@@ -6,12 +6,12 @@
 #include "ReEntairedSystem.h"
 
 void ReEntairedSystem::update(int timestep) {
-    int row = cells.size();
-    int col = cells[0].size();
+    int row = cells.getRow();
+    int col = cells.getCol();
     for (int i = 1; i < row - 1; i++) {
 
         for (int j = 1; j < col - 1; j++) {
-            auto &cell = cells[i][j];
+            auto &cell = cells[{i, j}];
             updateCell(cell, timestep);
         }
     }
@@ -35,19 +35,19 @@ void ReEntairedSystem::updateCell(Cell &cell, int timestep) {
             }
 
             int count = 0;
-            if (cells[row - 1][col].type == CellType::SEA) {
+            if (cells[{row - 1, col}].type == CellType::SEA) {
                 tab[0] = true;
                 count++;
             }
-            if (cells[row][col + 1].type == CellType::SEA) {
+            if (cells[{row, col + 1}].type == CellType::SEA) {
                 tab[1] = true;
                 count++;
             }
-            if (cells[row + 1][col].type == CellType::SEA) {
+            if (cells[{row + 1, col}].type == CellType::SEA) {
                 tab[2] = true;
                 count++;
             }
-            if (cells[row][col - 1].type == CellType::SEA) {
+            if (cells[{row, col - 1}].type == CellType::SEA) {
                 tab[3] = true;
                 count++;
             }

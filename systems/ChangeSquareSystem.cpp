@@ -8,11 +8,11 @@
 #include "ChangeSquareSystem.h"
 
 void ChangeSquareSystem::update(int timestep) {
-    int row = cells.size();
-    int col = cells[0].size();
+    int row = cells.getRow();
+    int col = cells.getCol();
     for (int i = 1; i < row - 1; i++) {
         for (int j = 1; j < col - 1; j++) {
-            auto& cell = cells[i][j];
+            auto& cell = cells[{i, j}];
             std::vector<bool> remove(cell.oilPoints.size(), false);
 
             for(int k=0; k<cell.oilPoints.size(); k++){
@@ -51,8 +51,8 @@ bool ChangeSquareSystem::update(Cell &cell, int i) {
     int newCol = (int) (x / config.cellSize);
 
     if (newRow != row || newCol != col) {
-        if (newRow < cells.size() && newRow > 0 && newCol < cells[0].size() && newCol > 0) {
-            cells[newRow][newCol].oilPoints.push_back(op);
+        if (newRow < cells.getRow() && newRow > 0 && newCol < cells.getCol() && newCol > 0) {
+            cells[{newRow, newCol}].oilPoints.push_back(op);
         }
 
         return true;

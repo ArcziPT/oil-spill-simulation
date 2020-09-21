@@ -16,7 +16,7 @@ private:
 public:
     DispersionComponent(Configurations& config);
 
-    void update(Cell& cell, OilPoint& op, const int &timestep) override;
+    void update(CellGrid& cells, int timestep) override;
 };
 
 

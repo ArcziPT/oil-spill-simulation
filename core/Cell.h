@@ -42,7 +42,31 @@ struct Cell
     Configurations &config;
 };
 
-typedef std::vector<std::vector<Cell>> CellGrid;
+class CellGrid{
+public:
+
+    CellGrid(int row, int col, Configurations& config);
+    CellGrid() = default;
+
+    struct CellPos{
+        int x;
+        int y;
+    };
+
+    Cell& operator[](CellPos cellPos);
+
+    std::vector<Cell>::iterator begin();
+    std::vector<Cell>::iterator end();
+
+    int getRow() const;
+    int getCol() const;
+
+private:
+    int row = 0;
+    int col = 0;
+    std::vector<Cell> cells;
+};
+
 typedef std::vector<std::vector<double>> GridValuesType;
 
 #endif

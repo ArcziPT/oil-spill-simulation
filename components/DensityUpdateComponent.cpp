@@ -6,7 +6,7 @@
 #include <iostream>
 #include <cmath>
 
-DensityUpdateComponent::DensityUpdateComponent(Configurations& config): config(config) {
+DensityUpdateComponent::DensityUpdateComponent(Configurations &config) : config(config) {
     this->densityAt15K = config.initialDensityOfOilPoint;
     this->salinity = config.salinity;
 }
@@ -39,12 +39,15 @@ double DensityUpdateComponent::calculateWaterDensity(double tempAtK) {
 }
 
 void
-DensityUpdateComponent::update(Cell& cell, OilPoint& op, const int &timestep) {
-    double emulsification = op.getEmulsification();
-    double evaporationRatio = op.getEvaporatedRatio();
-    double initialOilDensity = calculateDensity(cell.temperature);
-    op.density = (1 - emulsification)
-                                 * ((0.6 * initialOilDensity - 340) * evaporationRatio + initialOilDensity) +
-                                 emulsification * calculateWaterDensity(cell.temperature);
-
+DensityUpdateComponent::update(CellGrid &cells, int timestep) {
+    for (auto &cell : cells) {
+        for (auto &op : cell.oilPoints) {
+            double emulsification = op.getEmulsification();
+            double evaporationRatio = op.getEvaporatedRatio();
+            double initialOilDensity = calculateDensity(cell.temperature);
+            op.density = (1 - emulsification)
+                         * ((0.6 * initialOilDensity - 340) * evaporationRatio + initialOilDensity) +
+                         emulsification * calculateWaterDensity(cell.temperature);
+        }
+    }
 }
