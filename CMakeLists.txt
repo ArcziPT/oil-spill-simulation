@@ -4,6 +4,13 @@ project(OilSpill)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 11)
 
+set(COMPUTECPP_BITCODE ptx64)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
+
+#CHANGE TO COMPUTE_CPP ROOT DIRECTORY
+set(ComputeCpp_DIR ~/ComputeCpp)
+find_package(ComputeCpp REQUIRED)
+
 if (MSVC)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /FS")
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /FS")
@@ -39,7 +46,12 @@ add_executable(OilSpill main.cpp schedulers/CurrentScheduler.cpp schedulers/Curr
         systems/SPreadingSystem.cpp systems/SPreadingSystem.h 
         statistics/Statistics.cpp statistics/Statistics.h 
         statistics/StatisticsType.cpp statistics/StatisticsType.h)
+#ADD sycl:
+#add_sycl_to_target(TARGET OilSpill SOURCES components/EvaporationComponent.cpp)
 
 
 message("Root dir: " ${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${ComputeCpp_INCLUDE_DIRS})
+include_directories(${OpenCL_INCLUDE_DIRS})
+target_link_libraries(OilSpill PUBLIC ${COMPUTECPP_RUNTIME_LIBRARY} PUBLIC ${OpenCL_LIBRARIES})
