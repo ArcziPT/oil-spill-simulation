@@ -22,8 +22,8 @@ public:
     void update(int timestep) override;
 
 private:
-    void updatePair(Cell& cell1, Cell& cell2, int timestep, double volume);
-    Vector2 determineVector2(Cell& cell1, Cell& cell2, double deltaMass);
+    void updatePair(int x1, int y1, int x2, int y2, int timestep, double volume);
+    Vector2 determineVector2(int x1, int y1, int x2, int y2, double deltaMass);
     double calculateTotalVolume();
 
     double size;

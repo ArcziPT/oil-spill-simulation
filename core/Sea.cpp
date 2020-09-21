@@ -6,7 +6,7 @@
 #include "systems/ChangeSquareSystem.h"
 
 Sea::Sea(Configurations &config) : config(config), rows(config.rows), cols(config.cols),
-                                   timeCounter(), statistics(config)
+                                   timeCounter(), statistics(config), cells(config)
 {
     initialize();
 }
@@ -44,78 +44,42 @@ Statistics Sea::getStatistics()
     return statistics;
 }
 
-void Sea::setOil(const GridValuesType& array)
+void Sea::setOil(const GridValuesType<double>& array)
 {
-    for (int i = 1; i < rows - 1; i++)
-    {
-        for (int j = 1; j < cols - 1; j++)
-        {
-            cells[{i, j}].setOil(array[i - 1][j - 1]);
-        }
-    }
+    cells.setOil(array);
 }
 
-GridValuesType Sea::getOil()
+GridValuesType<double> Sea::getOil()
 {
-    GridValuesType array{};
-    for (int i = 0; i < rows; i++)
-    {
-        array.push_back(std::vector<double>());
-        for (int j = 0; j < cols; j++)
-        {
-            array[i].push_back(cells[{i, j}].getOil());
-        }
-    }
-    return array;
+    return cells.getOil();
 }
 
-void Sea::setTemperature(const GridValuesType& array)
+void Sea::setTemperature(const GridValuesType<double>& array)
 {
-    for (int i = 1; i < rows - 1; i++)
-    {
-        for (int j = 1; j < cols - 1; j++)
-        {
-            cells[{i, j}].temperature = (array[i - 1][j - 1]);
-        }
-    }
+    cells.setTemperature(array);
 }
 
-void Sea::setWind(const GridValuesType& array)
+void Sea::setWind(const GridValuesType<double>& array)
 {
-    for (int i = 1; i < rows - 1; i++)
-    {
-        for (int j = 1; j < cols - 1; j++)
-        {
-            cells[{i, j}].wind = (Vector2(array[i - 1][2 * j - 2], array[i - 1][2 * j - 1]));
-        }
-    }
+    cells.setWind(array);
 }
 
-void Sea::setCurrent(const GridValuesType& array)
+void Sea::setCurrent(const GridValuesType<double>& array)
 {
-    for (int i = 1; i < rows - 1; i++)
-    {
-        for (int j = 1; j < cols - 1; j++)
-        {
-            if (cells[{i, j}].type == CellType::SEA)
-            {
-                cells[{i, j}].current = (Vector2(array[i - 1][2 * j - 2], array[i - 1][2 * j - 1]));
-            }
-        }
-    }
+    cells.setCurrent(array);
 }
 
 void Sea::initialize()
 {
     timeCounter.reset();
-    cells = CellGrid(rows, cols, config);
+    cells.init(rows, cols);
     for (int i = 0; i < rows; i++)
     {
         for (int j = 0; j < cols; j++)
         {
             if (i == 0 || i == rows - 1 || j == 0 || j == cols - 1)
             {
-                cells[{i, j}].type = (CellType::FRAME);
+                cells.getCellParams(i,j).type = (CellType::FRAME);
             }
         }
     }

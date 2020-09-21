@@ -4,7 +4,7 @@
 
 #include "WindScheduler.h"
 
-void WindScheduler::add(int iteration, GridValuesType &array)
+void WindScheduler::add(int iteration, GridValuesType<double> &array)
 {
     if ((array.size() + 2) != sea->getCells().getRow() || (array[0].size() != 2 * (sea->getCells().getCol() - 2))) {
         throw InconsistentSizeException();
@@ -21,7 +21,7 @@ void WindScheduler::update(int iteration)
     auto it = map.find(iteration);
     if(it != map.end())
     {
-        GridValuesType &array = it->second;
+        GridValuesType<double> &array = it->second;
         sea->setWind(array);
     }
 }

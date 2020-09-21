@@ -18,7 +18,7 @@ private:
     Configurations& config;
     CellGrid& cells;
 
-    bool update(Cell& cell, int i);
+    bool update(int x, int y, int i);
 };
 
 

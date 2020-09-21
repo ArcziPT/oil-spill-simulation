@@ -1,10 +1,10 @@
 #include "OilPoint.h"
 
-double OilPoint::getEvaporatedRatio()
+double OilPoint::Params::getEvaporatedRatio() const
 {
-    return evaporatedMass / config.initialMassOfOilPoint;
+    return evaporatedMass / initialMassOfOilPoint;
 }
 
-double OilPoint::getEmulsification() const {
+double OilPoint::Params::getEmulsification() const {
     return (massOfEmulsion - mass) / massOfEmulsion;
 }

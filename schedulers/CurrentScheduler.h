@@ -12,7 +12,7 @@ class CurrentScheduler: public Scheduler
 {
 public:
     CurrentScheduler(std::shared_ptr<Sea> sea);
-    void add(int iteration, GridValuesType &array) override;
+    void add(int iteration, GridValuesType<double> &array) override;
     void update(int iteration) override;
 };
 

@@ -19,7 +19,7 @@ private:
     CellGrid &cells;
     Configurations& config;
 
-    void updateCell(Cell& cell, int timestep);
+    void updateCell(int x, int y, int timestep);
 };
 
 

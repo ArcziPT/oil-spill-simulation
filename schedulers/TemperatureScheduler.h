@@ -12,7 +12,7 @@ class TemperatureScheduler: public Scheduler
 {
 public:
     TemperatureScheduler(std::shared_ptr<Sea>sea);
-    void add(int iteration, GridValuesType &array) override;
+    void add(int iteration, GridValuesType<double>& array) override;
     void update(int iteration) override;
 };
 

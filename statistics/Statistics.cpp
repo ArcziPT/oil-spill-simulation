@@ -85,23 +85,22 @@ void Statistics::update(TimeCounter timeCounter, CellGrid& cellGrid) {
         auto listOfFraction = std::vector<double>(numberOfComponents, 0);
         for (int i = 1; i < rows - 1; i++) {
             for (int j = 1; j < cols - 1; j++) {
-                auto &cell = cellGrid[{i, j}];
+                oilPoints += cellGrid.size(i, j);
 
-                oilPoints += cell.oilPoints.size();
-
-                double actualMass = cell.getOil();
+                int id = cellGrid.id(i, j);
+                double actualMass = cellGrid.getOil(id);
                 oilMass += actualMass;
                 if (actualMass > 0) {
                     area++;
                 }
 
-                emulsionMass += cell.getMassOfEmulsion();
-                density += cell.getDensity() * cell.getMassOfEmulsion();
-                evaporatedMass += cell.getTotalEvaporatedMass();
-                dispersedMass += cell.getTotalDispersedMass();
-                viscosity += cell.getViscosity() * cell.getMassOfEmulsion();
+                emulsionMass += cellGrid.getMassOfEmulsion(id);
+                density += cellGrid.getDensity(id) * cellGrid.getMassOfEmulsion(id);
+                evaporatedMass += cellGrid.getTotalEvaporatedMass(id);
+                dispersedMass += cellGrid.getTotalDispersedMass(id);
+                viscosity += cellGrid.getViscosity(id) * cellGrid.getMassOfEmulsion(id);
 
-                auto actualListOfFraction = cell.getComponentsFraction();
+                auto actualListOfFraction = cellGrid.getComponentsFraction(i, j);
                 if (!actualListOfFraction.empty()) {
                     for (int k = 0; k < numberOfComponents; k++) {
                         listOfFraction[k] = listOfFraction[k] + actualListOfFraction[k] * actualMass;

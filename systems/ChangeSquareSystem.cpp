@@ -4,6 +4,7 @@
 
 
 #include <algorithm>
+#include <iostream>
 
 #include "ChangeSquareSystem.h"
 
@@ -12,23 +13,14 @@ void ChangeSquareSystem::update(int timestep) {
     int col = cells.getCol();
     for (int i = 1; i < row - 1; i++) {
         for (int j = 1; j < col - 1; j++) {
-            auto& cell = cells[{i, j}];
-            std::vector<bool> remove(cell.oilPoints.size(), false);
+            std::vector<bool> remove(cells.size(i, j), false);
 
-            for(int k=0; k<cell.oilPoints.size(); k++){
-                remove[k] = update(cell, k);
+            for(int k=0; k<cells.size(i, j); k++){
+                remove[k] = update(i, j, k);
             }
 
             //remove oilPoints, which now are not in this cell
-            std::vector<OilPoint> newPoints{};
-            for(int k=0; k<cell.oilPoints.size(); k++){
-                if(remove[k])
-                    continue;
-
-                newPoints.push_back(cell.oilPoints[k]);
-            }
-
-            cell.oilPoints = std::move(newPoints);
+            cells.removeOilPoints(i, j, remove);
         }
     }
 }
@@ -39,24 +31,23 @@ void ChangeSquareSystem::update(int timestep) {
  * @param cell
  * @param i
  */
-bool ChangeSquareSystem::update(Cell &cell, int i) {
-    auto& op = cell.oilPoints[i];
+bool ChangeSquareSystem::update(int x, int y, int i) {
+    auto& op = cells.getOilPointsParams(x,y).oilPointsParams[i];
     Vector2 position = op.position;
-    double x = position.getX();
-    double y = position.getY();
-    int row = cell.row;
-    int col = cell.col;
+    double posX = position.getX();
+    double posY = position.getY();
+    int row = x;
+    int col = y;
 
-    int newRow = (int) (y / config.cellSize);
-    int newCol = (int) (x / config.cellSize);
+    int newRow = (int) (posY / config.cellSize);
+    int newCol = (int) (posX / config.cellSize);
 
     if (newRow != row || newCol != col) {
         if (newRow < cells.getRow() && newRow > 0 && newCol < cells.getCol() && newCol > 0) {
-            cells[{newRow, newCol}].oilPoints.push_back(op);
+            cells.getOilPointsParams(x,y).oilPointsParams.push_back(op);
+            cells.copyOilPoint(x, y, i, newRow, newCol);
         }
-
         return true;
     }
-
     return false;
 }

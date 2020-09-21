@@ -40,8 +40,12 @@ double DensityUpdateComponent::calculateWaterDensity(double tempAtK) {
 
 void
 DensityUpdateComponent::update(CellGrid &cells, int timestep) {
-    for (auto &cell : cells) {
-        for (auto &op : cell.oilPoints) {
+    auto& cellParams = cells.getCellParams();
+    auto& opParams = cells.getOilPointsParams();
+
+    for (int i=0; i<cellParams.size(); i++) {
+        auto& cell = cellParams[i];
+        for (auto &op : opParams[i].oilPointsParams) {
             double emulsification = op.getEmulsification();
             double evaporationRatio = op.getEvaporatedRatio();
             double initialOilDensity = calculateDensity(cell.temperature);

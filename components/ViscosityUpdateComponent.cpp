@@ -8,8 +8,8 @@
 ViscosityUpdateComponent::ViscosityUpdateComponent(Configurations &config) : config(config) {}
 
 void ViscosityUpdateComponent::update(CellGrid &cells, int timestep) {
-    for (auto &cell : cells) {
-        for (auto &op : cell.oilPoints) {
+    for (auto &cell : cells.getOilPointsParams()) {
+        for (auto &op : cell.oilPointsParams) {
             double actualVis = op.viscosity;
             double deltaVis = config.viscosityParameter * actualVis * op.lastDeltaF +
                               2.5 * actualVis * op.lastDeltaY /

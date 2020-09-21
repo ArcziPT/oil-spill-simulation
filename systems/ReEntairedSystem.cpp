@@ -11,23 +11,25 @@ void ReEntairedSystem::update(int timestep) {
     for (int i = 1; i < row - 1; i++) {
 
         for (int j = 1; j < col - 1; j++) {
-            auto &cell = cells[{i, j}];
-            updateCell(cell, timestep);
+            updateCell(i, j, timestep);
         }
     }
 }
 
-void ReEntairedSystem::updateCell(Cell &cell, int timestep) {
+void ReEntairedSystem::updateCell(int x, int y, int timestep) {
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_real_distribution<double> dist(1.0, std::numeric_limits<double>::max());
+
+    auto& cell = cells.getCellParams(x, y);
+    auto& opParams = cells.getOilPointsParams(x, y);
 
     TypeInfo type = cell.type;
     if (!(type == CellType::SEA) && !(type == CellType::FRAME)) {
         int row = cell.row;
         int col = cell.col;
-        double mass = cell.getOil();
-        auto& ops = cell.oilPoints;
+        double mass = cells.getOil(cells.id(x,y));
+        auto& ops = opParams.oilPointsParams;
         if (mass > 0) {
             bool tab[4];
             for (bool & i : tab) {
@@ -35,19 +37,19 @@ void ReEntairedSystem::updateCell(Cell &cell, int timestep) {
             }
 
             int count = 0;
-            if (cells[{row - 1, col}].type == CellType::SEA) {
+            if (cells.getCellParams(row - 1, col).type == CellType::SEA) {
                 tab[0] = true;
                 count++;
             }
-            if (cells[{row, col + 1}].type == CellType::SEA) {
+            if (cells.getCellParams(row, col + 1).type == CellType::SEA) {
                 tab[1] = true;
                 count++;
             }
-            if (cells[{row + 1, col}].type == CellType::SEA) {
+            if (cells.getCellParams(row + 1, col).type == CellType::SEA) {
                 tab[2] = true;
                 count++;
             }
-            if (cells[{row, col - 1}].type == CellType::SEA) {
+            if (cells.getCellParams(row, col - 1).type == CellType::SEA) {
                 tab[3] = true;
                 count++;
             }

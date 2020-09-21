@@ -10,18 +10,17 @@
 #include "core/Sea.h"
 #include "exceptions.h"
 
-using GridValuesType = std::vector<std::vector<double>>;
 class Sea;
 
 class Scheduler
 {
 protected:
-    std::unordered_map<int, GridValuesType> map;
+    std::unordered_map<int, GridValuesType<double>> map;
     std::shared_ptr<Sea> sea;
     
 public:
     Scheduler(std::shared_ptr<Sea> _sea);
-    virtual void add(int iteration, GridValuesType& array) = 0;
+    virtual void add(int iteration, GridValuesType<double>& array) = 0;
     void remove(int iteration);
     virtual void update(int iteration) = 0;
 };

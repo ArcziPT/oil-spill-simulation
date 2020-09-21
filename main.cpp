@@ -34,7 +34,7 @@ int main(int argc, char** argv)
     auto sea = std::make_shared<Sea>(config);
     sea->init();
 
-    auto oil = GridValuesType(148, std::vector<double>(148, 0));
+    auto oil = GridValuesType<double>(148, std::vector<double>(148, 0));
     for(int i=0; i<148; i++){
         for(int j=0; j<148; j++){
             oil[i][j] = 1000;

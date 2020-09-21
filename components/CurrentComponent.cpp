@@ -10,8 +10,12 @@
 CurrentComponent::CurrentComponent(Configurations &config) : config(config) {}
 
 void CurrentComponent::update(CellGrid &cells, int timestep) {
-    for (auto &cell : cells) {
-        for (auto &op : cell.oilPoints) {
+    auto& cellParams = cells.getCellParams();
+    auto& opParams = cells.getOilPointsParams();
+
+    for (int i=0; i<cellParams.size(); i++) {
+        auto& cell = cellParams[i];
+        for (auto &op : opParams[i].oilPointsParams) {
             Vector2 velocityOfCurrent = cell.current;
             //nie jestem pewien tego
             if (velocityOfCurrent.x != 0 && velocityOfCurrent.y != 0) {

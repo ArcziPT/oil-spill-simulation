@@ -12,8 +12,8 @@ AdvectionMovementComponent::AdvectionMovementComponent(Configurations &config) :
 }
 
 void AdvectionMovementComponent::update(CellGrid &cells, int timestep) {
-    for (auto &cell : cells) {
-        for (auto &op : cell.oilPoints) {
+    for (auto &cell : cells.getOilPointsParams()) {
+        for (auto &op : cell.oilPointsParams) {
             auto offsetX = op.velocity.x * timestep;
             auto offsetY = op.velocity.x * timestep;
 

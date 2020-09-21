@@ -24,7 +24,7 @@ add_executable(OilSpill main.cpp schedulers/CurrentScheduler.cpp schedulers/Curr
         core/CellType.cpp core/CellType.h
         core/Configurations.h
         core/EditItem.h
-        core/OilComponent.cpp core/OilComponent.h
+        core/OilComponent.h
         core/OilPoint.cpp core/OilPoint.h
         core/Sea.cpp core/Sea.h
         core/Vector2.cpp core/Vector2.h 

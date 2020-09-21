@@ -30,12 +30,12 @@ public:
     CellGrid& getCells();
     Statistics getStatistics();
 
-    void setOil(const GridValuesType& array);
-    GridValuesType getOil();
+    void setOil(const GridValuesType<double>& array);
+    GridValuesType<double> getOil();
 
-    void setTemperature(const GridValuesType& array);
-    void setWind(const GridValuesType& array);
-    void setCurrent(const GridValuesType& array);
+    void setTemperature(const GridValuesType<double>& array);
+    void setWind(const GridValuesType<double >& array);
+    void setCurrent(const GridValuesType<double >& array);
 
     void initialize();
     void reset();
