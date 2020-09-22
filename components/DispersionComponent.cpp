@@ -13,7 +13,7 @@ void DispersionComponent::update(CellGrid &cells, int timestep) {
 
     for (int i=0; i<cellParams.size(); i++) {
         auto& cell = cellParams[i];
-        for (auto &op : opParams[i].oilPointsParams)  {
+        for (auto &op : opParams[i])  {
             double tension = config.oilWaterTension * (1 + op.getEvaporatedRatio());
             double Da = 0.11 * std::pow(cell.wind.getR() + 1, 2);
             double Db = 1 / (1 + 50 * std::sqrt(op.viscosity) * cells.getThickness(i) * 100 * tension);

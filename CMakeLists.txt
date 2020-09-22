@@ -47,7 +47,7 @@ add_executable(OilSpill main.cpp schedulers/CurrentScheduler.cpp schedulers/Curr
         statistics/Statistics.cpp statistics/Statistics.h 
         statistics/StatisticsType.cpp statistics/StatisticsType.h)
 #ADD sycl:
-#add_sycl_to_target(TARGET OilSpill SOURCES components/EvaporationComponent.cpp)
+add_sycl_to_target(TARGET OilSpill SOURCES components/EvaporationComponent.cpp)
 
 
 message("Root dir: " ${PROJECT_SOURCE_DIR})

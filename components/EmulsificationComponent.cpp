@@ -12,7 +12,7 @@ void EmulsificationComponent::update(CellGrid &cells, int timestep) {
 
     for (int i=0; i<cellParams.size(); i++) {
         auto& cell = cellParams[i];
-        for (auto &op : opParams[i].oilPointsParams)   {
+        for (auto &op : opParams[i]){
             double windSpeed = cell.wind.len();
             double Y = op.getEmulsification();
             double deltaY = 2E-6 * (windSpeed + 1) * (windSpeed + 1) * (1 - Y / config.mousseViscosity)

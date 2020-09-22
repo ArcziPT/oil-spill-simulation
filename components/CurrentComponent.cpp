@@ -15,7 +15,7 @@ void CurrentComponent::update(CellGrid &cells, int timestep) {
 
     for (int i=0; i<cellParams.size(); i++) {
         auto& cell = cellParams[i];
-        for (auto &op : opParams[i].oilPointsParams) {
+        for (auto &op : opParams[i]) {
             Vector2 velocityOfCurrent = cell.current;
             //nie jestem pewien tego
             if (velocityOfCurrent.x != 0 && velocityOfCurrent.y != 0) {

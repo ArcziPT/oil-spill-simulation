@@ -18,14 +18,6 @@ namespace Cell
 
         Params(int row, int col): row(row), col(col) {}
     };
-
-    struct OilPointsParams{
-        std::vector<OilPoint::Params> oilPointsParams;
-    };
-
-    struct OilPointsComponents{
-        std::vector<OilPoint::Components> oilPointComponents;
-    };
 };
 
 class CellGrid{
@@ -34,14 +26,14 @@ public:
     void init(int row, int col);
 
     Cell::Params& getCellParams(int x, int y);
-    Cell::OilPointsParams& getOilPointsParams(int x, int y);
-    Cell::OilPointsParams& getDeletedOilPointsParams(int x, int y);
-    Cell::OilPointsComponents& getOilPointComponents(int x, int y);
+    std::vector<OilPoint::Params> & getOilPointsParams(int x, int y);
+    std::vector<OilPoint::Params> & getDeletedOilPointsParams(int x, int y);
+    std::vector<OilPoint::Components> & getOilPointComponents(int x, int y);
 
     std::vector<Cell::Params>& getCellParams();
-    std::vector<Cell::OilPointsParams>& getOilPointsParams();
-    std::vector<Cell::OilPointsParams>& getDeletedOilPointsParams();
-    std::vector<Cell::OilPointsComponents>& getOilPointComponents();
+    std::vector<std::vector<OilPoint::Params>>& getOilPointsParams();
+    std::vector<std::vector<OilPoint::Params>>& getDeletedOilPointsParams();
+    std::vector<std::vector<OilPoint::Components>> & getOilPointComponents();
 
     void copyOilPoint(int sx, int sy, int si, int dx, int dy);
     void removeOilPoints(int x, int y, const std::vector<bool>& doRemove);
@@ -82,10 +74,10 @@ private:
     int col = 0;
 
     std::vector<Cell::Params> cellsParams;
-    std::vector<Cell::OilPointsParams> cellsOilPointsParams;
-    std::vector<Cell::OilPointsParams> cellDeletedOilPointsParams;
-    std::vector<Cell::OilPointsComponents> cellsOilPointsComponents;
-    std::vector<Cell::OilPointsComponents> cellsDeletedOilPointsComponents;
+    std::vector<std::vector<OilPoint::Params>> cellsOilPointsParams;
+    std::vector<std::vector<OilPoint::Params>> cellDeletedOilPointsParams;
+    std::vector<std::vector<OilPoint::Components>> cellsOilPointsComponents;
+    std::vector<std::vector<OilPoint::Components>> cellsDeletedOilPointsComponents;
 
     void setTemperature(int i, double temperature);
     void setWind(int i, const Vector2& wind);

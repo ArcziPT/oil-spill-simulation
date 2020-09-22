@@ -32,7 +32,7 @@ void ChangeSquareSystem::update(int timestep) {
  * @param i
  */
 bool ChangeSquareSystem::update(int x, int y, int i) {
-    auto& op = cells.getOilPointsParams(x,y).oilPointsParams[i];
+    auto& op = cells.getOilPointsParams(x,y)[i];
     Vector2 position = op.position;
     double posX = position.getX();
     double posY = position.getY();
@@ -44,7 +44,7 @@ bool ChangeSquareSystem::update(int x, int y, int i) {
 
     if (newRow != row || newCol != col) {
         if (newRow < cells.getRow() && newRow > 0 && newCol < cells.getCol() && newCol > 0) {
-            cells.getOilPointsParams(x,y).oilPointsParams.push_back(op);
+            cells.getOilPointsParams(x,y).push_back(op);
             cells.copyOilPoint(x, y, i, newRow, newCol);
         }
         return true;

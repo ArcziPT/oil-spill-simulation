@@ -13,15 +13,11 @@ using namespace cl;
 EvaporationComponent::EvaporationComponent(Configurations &config) : config(config) {}
 
 void EvaporationComponent::update(CellGrid &cells, int timestep) {
-    auto& cellsParams = cells.getCellParams();
-    auto& opComponents = cells.getOilPointComponents();
-    auto& opParams = cells.getOilPointsParams();
-
-    for (int i=0; i<cellsParams.size(); i++) {
-        auto& cell = cellsParams[i];
-        for (int j=0; j<opComponents[i].oilPointComponents.size(); j++) {
-            auto& op = opParams[i].oilPointsParams[j];
-            auto& components = opComponents[i].oilPointComponents[j];
+    for (int i = 0; i < cellsParams.size(); i++) {
+        auto &cell = cellsParams[i];
+        for (int j = 0; j < opComponents[i].size(); j++) {
+            auto &op = opParams[i][j];
+            auto &components = opComponents[i][j];
 
             double temp = cell.temperature;
             std::vector<double> lossMassArray;
@@ -44,7 +40,8 @@ void EvaporationComponent::update(CellGrid &cells, int timestep) {
                     double P = (double) (100000 * std::exp(A)); // Vapor pressure
                     // [Pa]
                     double lossmass = (K * molecularWeigth * P * x / (R * temp)
-                                       * timestep * (config.cellSize * config.cellSize)) / opParams[i].oilPointsParams.size(); //number of oilPoints
+                                       * timestep * (config.cellSize * config.cellSize)) /
+                                      opParams[i].size(); //number of oilPoints
                     lossMassArray.push_back(lossmass);
                 } else {
                     lossMassArray.push_back(0);

@@ -29,7 +29,7 @@ void ReEntairedSystem::updateCell(int x, int y, int timestep) {
         int row = cell.row;
         int col = cell.col;
         double mass = cells.getOil(cells.id(x,y));
-        auto& ops = opParams.oilPointsParams;
+        auto& ops = opParams;
         if (mass > 0) {
             bool tab[4];
             for (bool & i : tab) {

@@ -87,16 +87,16 @@ void SpreadingSystem::updatePair(int x1, int y1, int x2, int y2, int timestep, d
         return;
     }
 
-    if (cells.getThickness(cells.id(fx, fy)) > config.minSlickThickness && cells.getOilPointsParams(fx, fy).oilPointsParams.size() > 1) {
+    if (cells.getThickness(cells.id(fx, fy)) > config.minSlickThickness && cells.getOilPointsParams(fx, fy).size() > 1) {
 
         std::random_device rd;
         std::mt19937 mt(rd());
         std::uniform_real_distribution<double> dist(1.0, std::numeric_limits<double>::max());
 
         Vector2 vector = determineVector2(x1, y1, x2, y2, deltaMass);
-        std::vector<bool> toRemove(cells.getOilPointsParams(fx, fy).oilPointsParams.size(), false);
-        for (int i=0; i<cells.getOilPointsParams(fx, fy).oilPointsParams.size(); i++) {
-            auto& op = cells.getOilPointsParams(fx, fy).oilPointsParams[i];
+        std::vector<bool> toRemove(cells.getOilPointsParams(fx, fy).size(), false);
+        for (int i=0; i<cells.getOilPointsParams(fx, fy).size(); i++) {
+            auto& op = cells.getOilPointsParams(fx, fy)[i];
             if (ratio > dist(mt)) {
                 op.position += (vector);
                 toRemove[i] = true;
