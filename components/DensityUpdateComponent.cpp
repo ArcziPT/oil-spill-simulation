@@ -39,19 +39,23 @@ double DensityUpdateComponent::calculateWaterDensity(double tempAtK) {
 }
 
 void
-DensityUpdateComponent::update(CellGrid &cells, int timestep) {
-    auto& cellParams = cells.getCellParams();
-    auto& opParams = cells.getOilPointsParams();
-
-    for (int i=0; i<cellParams.size(); i++) {
-        auto& cell = cellParams[i];
-        for (auto &op : opParams[i]) {
-            double emulsification = op.getEmulsification();
-            double evaporationRatio = op.getEvaporatedRatio();
-            double initialOilDensity = calculateDensity(cell.temperature);
-            op.density = (1 - emulsification)
-                         * ((0.6 * initialOilDensity - 340) * evaporationRatio + initialOilDensity) +
-                         emulsification * calculateWaterDensity(cell.temperature);
-        }
-    }
+DensityUpdateComponent::update(sycl::queue& queue, CellGrid& cells,
+                               sycl::buffer<Cell::Params, 1>& cellParamsBuf,
+                               sycl::buffer<OilPoint::Params, 1>& opParamsBuf,
+                               sycl::buffer<OilComponent, 2>& opCompBuf,
+                               int timestep) {
+//    auto& cellParams = cells.getCellParams();
+//    auto& opParams = cells.getOilPointsParams();
+//
+//    for (int i=0; i<cellParams.size(); i++) {
+//        auto& cell = cellParams[i];
+//        for (auto &op : opParams[i]) {
+//            double emulsification = op.getEmulsification();
+//            double evaporationRatio = op.getEvaporatedRatio();
+//            double initialOilDensity = calculateDensity(cell.temperature);
+//            op.density = (1 - emulsification)
+//                         * ((0.6 * initialOilDensity - 340) * evaporationRatio + initialOilDensity) +
+//                         emulsification * calculateWaterDensity(cell.temperature);
+//        }
+//    }
 }

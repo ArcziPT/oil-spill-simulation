@@ -14,7 +14,11 @@ class OilPointComponentsSystem : public OilSystem {
 public:
     OilPointComponentsSystem(std::shared_ptr<Sea> sea, Configurations& config);
 
-    void update(int timestep) override;
+    void update(sycl::queue& queue,
+                sycl::buffer<Cell::Params, 1>& cellParamsBuf,
+                sycl::buffer<OilPoint::Params, 1>& opParamsBuf,
+                sycl::buffer<OilComponent, 2>& opCompBuf,
+                int timestep) override;
 
 private:
     std::vector<std::unique_ptr<OilPointComponent>> oilComponents{};

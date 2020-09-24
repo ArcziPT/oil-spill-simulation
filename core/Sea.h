@@ -8,7 +8,7 @@
 #include <vector>
 #include <vector>
 #include "systems/TimeCounter.h"
-#include "statistics/Statistics.h"
+//#include "statistics/Statistics.h"
 #include "schedulers/SchedulersController.h"
 #include "systems/OilSystem.h"
 
@@ -28,7 +28,7 @@ public:
     std::shared_ptr<SchedulersController> getSchedulersController();
     TimeCounter getTimeCounter();
     CellGrid& getCells();
-    Statistics getStatistics();
+    //Statistics getStatistics();
 
     void setOil(const GridValuesType<double>& array);
     GridValuesType<double> getOil();
@@ -50,7 +50,7 @@ private:
     CellGrid cells;
     Configurations &config;
     TimeCounter timeCounter;
-    Statistics statistics;
+    //Statistics statistics;
     std::vector<std::unique_ptr<OilSystem>> systems;
     std::shared_ptr<SchedulersController> schedulersController;
     int cols;

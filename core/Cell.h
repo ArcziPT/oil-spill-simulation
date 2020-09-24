@@ -23,21 +23,11 @@ namespace Cell
 class CellGrid{
 public:
     CellGrid(Configurations& config): config(config) {}
-    void init(int row, int col);
-
-    Cell::Params& getCellParams(int x, int y);
-    std::vector<OilPoint::Params> & getOilPointsParams(int x, int y);
-    std::vector<OilPoint::Params> & getDeletedOilPointsParams(int x, int y);
-    std::vector<OilPoint::Components> & getOilPointComponents(int x, int y);
+    void init(int row, int col, int compNum);
 
     std::vector<Cell::Params>& getCellParams();
-    std::vector<std::vector<OilPoint::Params>>& getOilPointsParams();
-    std::vector<std::vector<OilPoint::Params>>& getDeletedOilPointsParams();
-    std::vector<std::vector<OilPoint::Components>> & getOilPointComponents();
-
-    void copyOilPoint(int sx, int sy, int si, int dx, int dy);
-    void removeOilPoints(int x, int y, const std::vector<bool>& doRemove);
-    void removeOilPoint(int i, int j);
+    std::vector<OilPoint::Params>& getOilPointsParams();
+    std::vector<OilComponent>& getOilPointsComponents();
 
     void setOil(std::vector<std::vector<double>> oil);
     std::vector<std::vector<double>> getOil();
@@ -45,46 +35,30 @@ public:
     void setCurrent(std::vector<std::vector<double>> current);
     void setWind(std::vector<std::vector<double>> wind);
 
-    double getOil(int i);
-    double getThickness(int i);
-    double getDensity(int i);
-    double getViscosity(int i);
-    double getMassOfEmulsion(int i);
-    double getEmulsification(int i);
-    double getEvaporationRatio(int i);
-    double getDispersedMass(int i);
-    double getEvaporatedMass(int i);
-    double getTotalEvaporatedMass(int i);
-    double getTotalDispersedMass(int i);
-    double getVolume(int i);
-    int size(int x, int y);
-    std::vector<double> getComponentsFraction(int x, int y);
-
     int getRow() const;
     int getCol() const;
     int size() const;
 
-    constexpr inline int id(int x, int y) const{
-        return x*col + y;
+    constexpr inline int id(const OilPoint::Params::CellPos& pos) const{
+        return pos.x*col + pos.y;
     };
 
 private:
     Configurations& config;
     int row = 0;
     int col = 0;
+    int compNum = 0;
 
     std::vector<Cell::Params> cellsParams;
-    std::vector<std::vector<OilPoint::Params>> cellsOilPointsParams;
-    std::vector<std::vector<OilPoint::Params>> cellDeletedOilPointsParams;
-    std::vector<std::vector<OilPoint::Components>> cellsOilPointsComponents;
-    std::vector<std::vector<OilPoint::Components>> cellsDeletedOilPointsComponents;
+    std::vector<OilPoint::Params> cellsOilPointsParams;
+    std::vector<OilComponent> cellsOilPointsComponents;
 
-    void setTemperature(int i, double temperature);
-    void setWind(int i, const Vector2& wind);
-    void setCurrent(int i, const Vector2& current);
-    void setOil(int i, double mass);
-    void addOilPoints(int i, int n);
-    void addMass(int i, double mass);
+    void setTemperature(int x, int y, double temperature);
+    void setWind(int x, int y, const Vector2& wind);
+    void setCurrent(int x, int y, const Vector2& current);
+    void setOil(int x, int y, double mass);
+    void addOilPoints(int x, int y, int n);
+    void addMass(int x, int y, double mass);
 };
 
 template <typename T>

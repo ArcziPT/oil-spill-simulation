@@ -9,7 +9,7 @@ struct Color
 
     Color(int r, int g, int b) : r(r), g(g), b(b) {}
 
-    bool operator==(const Color& color) const;
+    //bool operator==(const Color& color) const;
 };
 
 struct TypeInfo
@@ -18,9 +18,9 @@ struct TypeInfo
     Color color;
 
     TypeInfo(double halfTime, Color color) : halfTime(halfTime), color(color) {}
-    double rateConstant() const;
+    //double rateConstant() const;
 
-    bool operator==(const TypeInfo& type) const;
+    //bool operator==(const TypeInfo& type) const;
 };
 
 struct CellType

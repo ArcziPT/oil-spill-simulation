@@ -4,83 +4,114 @@
 
 #include "EvaporationComponent.h"
 #include <cmath>
-#include <vector>
-
-#include <CL/sycl.hpp>
 
 using namespace cl;
 
 EvaporationComponent::EvaporationComponent(Configurations &config) : config(config) {}
 
-void EvaporationComponent::update(CellGrid &cells, int timestep) {
-    for (int i = 0; i < cellsParams.size(); i++) {
-        auto &cell = cellsParams[i];
-        for (int j = 0; j < opComponents[i].size(); j++) {
-            auto &op = opParams[i][j];
-            auto &components = opComponents[i][j];
+void EvaporationComponent::update(sycl::queue& queue, CellGrid& cells,
+                                  sycl::buffer<Cell::Params, 1>& cellParamsBuf,
+                                  sycl::buffer<OilPoint::Params, 1>& opParamsBuf,
+                                  sycl::buffer<OilComponent, 2>& opCompBuf,
+                                  int timestep) {
+    sycl::buffer<double, 2> lossMassArrayBuf(opCompBuf.get_range());
+    sycl::buffer<double, 2> vpBuf(opCompBuf.get_range());
 
-            double temp = cell.temperature;
-            std::vector<double> lossMassArray;
+    {
+        auto vpO = vpBuf.get_access<sycl::access::mode::write>();
+        auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>();
+        auto opParamsI = opParamsBuf.get_access<sycl::access::mode::read>();
+        auto opCompI = opCompBuf.get_access<sycl::access::mode::read>();
+
+        int col = cells.getCol();
+        auto id = [col](OilPoint::Params::CellPos pos) -> int{
+            return pos.x * col + pos.y;
+        };
+
+        for(int i=0; i<opParamsBuf.get_count(); i++){
+            auto& op = opParamsI[i];
+            auto& cell = cellParamsI[id(op.cellPos)];
+            for(int j=0; j<config.oilComponents.size(); j++){
+                double A = -(4.4 + std::log(opCompI[i][j].tb)) * (1.803 * (opCompI[i][j].tb / cell.temperature - 1) - 0.803 * std::log(opCompI[i][j].tb / cell.temperature));
+                vpO[i][j] = (double) (100000 * std::exp(A)); // Vapor pressure
+            }
+        }
+    }
+
+    queue.submit([&](sycl::handler& cgh){
+        auto cellParamsIO = cellParamsBuf.get_access<sycl::access::mode::read_write>(cgh);
+        auto opParamsIO = opParamsBuf.get_access<sycl::access::mode::read_write>(cgh);
+        auto opCompIO = opCompBuf.get_access<sycl::access::mode::read_write>(cgh);
+        auto lossMassArrayIO = lossMassArrayBuf.get_access<sycl::access::mode::read_write>(cgh);
+        auto vpI = vpBuf.get_access<sycl::access::mode::read>(cgh);
+
+        int col = cells.getCol();
+        auto id = [col](OilPoint::Params::CellPos pos) -> int{
+            return pos.x * col + pos.y;
+        };
+        auto evaporatedRatio = [](const OilPoint::Params& op) -> double{
+            return op.evaporatedMass / op.initialMassOfOilPoint;
+        };
+
+        int cellSize = config.cellSize;
+        int comp_len = config.oilComponents.size();
+        int op_num = opParamsBuf.get_count();
+        cgh.parallel_for<class ECUpdate>(sycl::range<1>(opParamsBuf.get_count()), [=](sycl::id<1> i){
+            auto& op = opParamsIO[i];
+
+            if(op.removed)
+                return;
+
+            double temp = cellParamsIO[id(op.cellPos)].temperature;
 
             double totalMole = 0;
-            for (auto &comp : components.components) {
-                totalMole += (comp.x / comp.molecularWeigth);
+            for (int j=0; j<comp_len; j++) {
+                totalMole += (opCompIO[i[0]][j].x / opCompIO[i[0]][j].molecularWeigth);
             }
 
             double x = 0;
-            for (auto &comp : components.components) {
-                x = comp.x / (comp.molecularWeigth * totalMole);
+            for (int j=0; j<comp_len; j++) {
+                x = opCompIO[i[0]][j].x / (opCompIO[i[0]][j].molecularWeigth * totalMole);
 
                 if (x != 0) {
-                    double Tb = comp.tb;
-                    double molecularWeigth = comp.molecularWeigth;
-
-                    double A = -(4.4 + std::log(Tb))
-                               * (1.803 * (Tb / temp - 1) - 0.803 * std::log(Tb / temp));
-                    double P = (double) (100000 * std::exp(A)); // Vapor pressure
-                    // [Pa]
-                    double lossmass = (K * molecularWeigth * P * x / (R * temp)
-                                       * timestep * (config.cellSize * config.cellSize)) /
-                                      opParams[i].size(); //number of oilPoints
-                    lossMassArray.push_back(lossmass);
+                    double molecularWeigth = opCompIO[i[0]][j].molecularWeigth;
+                    double lossmass = (K * molecularWeigth * vpI[i[0]][j] * x / (R * temp)
+                                       * timestep * (cellSize * cellSize)) / op_num; //number of oilPoints
+                    lossMassArrayIO[i[0]][j] = lossmass;
                 } else {
-                    lossMassArray.push_back(0);
+                    lossMassArrayIO[i[0]][j] = 0;
                 }
             }
 
             double actualMass = op.mass;
             double totalLossMass = 0;
-            for (double n : lossMassArray) {
-                totalLossMass += n;
+            for (int j=0; j<comp_len; j++) {
+                totalLossMass += lossMassArrayIO[i[0]][j];
             }
 
             double newMass = actualMass - totalLossMass;
-            int k = 0;
-            for (auto &comp : components.components) {
-                double lossMass = lossMassArray[k++];
+            for(int j=0; j<comp_len; j++) {
+                double lossMass = lossMassArrayIO[i[0]][j];
                 if (lossMass > 0) {
-                    double newX = (comp.x * actualMass - lossMass) / newMass;
+                    double newX = (opCompIO[i[0]][j].x * actualMass - lossMass) / newMass;
                     if (newX < 0.00001) {
                         newX = 0;
                     }
-                    comp.x = newX;
+                    opCompIO[i[0]][j].x = newX;
                 }
 
             }
 
             if (newMass > 0.00001) {
-                double lastEvaporatedRatio = op.getEvaporatedRatio();
+                double lastEvaporatedRatio = evaporatedRatio(op);
                 op.mass = newMass;
 
                 op.evaporatedMass = op.evaporatedMass + totalLossMass;
                 op.massOfEmulsion = op.massOfEmulsion - totalLossMass;
-                op.lastDeltaF = op.getEvaporatedRatio() - lastEvaporatedRatio;
-
-
+                op.lastDeltaF = evaporatedRatio(op) - lastEvaporatedRatio;
             } else {
-                cells.removeOilPoint(i, j);
                 op.removed = true;
             }
-        }
-    }
+        });
+    });
 }

@@ -3,6 +3,9 @@
 //
 #include <iostream>
 #include <vector>
+#include <SYCL/sycl.hpp>
+using namespace cl;
+
 #include "core/OilPoint.h"
 #include "core/Cell.h"
 
@@ -12,7 +15,11 @@
 
 class OilPointComponent {
 public:
-    virtual void update(CellGrid& cells, int timestep) = 0;
+    virtual void update(sycl::queue& queue, CellGrid& cells,
+                        sycl::buffer<Cell::Params, 1>& cellParamsBuf,
+                        sycl::buffer<OilPoint::Params, 1>& opParamsBuf,
+                        sycl::buffer<OilComponent, 2>& opCompBuf,
+                        int timestep) = 0;
 };
 
 

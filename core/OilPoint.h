@@ -13,7 +13,6 @@ namespace OilPoint
 	struct Params {
         Vector2 position;
         Vector2 velocity{0, 0};
-        bool removed = false;
         double mass;
         double density;
         double massOfEmulsion;
@@ -25,20 +24,22 @@ namespace OilPoint
 
         double initialMassOfOilPoint;
 
+        struct CellPos{
+            int x;
+            int y;
+            CellPos(int x, int y): x(x), y(y) {}
+        };
+        CellPos cellPos;
+        bool removed = false;
+
         Params(double mass, double massOfEmulsion, double initialMassOfOilPoint,
                const Vector2& position, double density,
-               double viscosity)
+               double viscosity, CellPos pos)
                : mass(mass), massOfEmulsion(massOfEmulsion), initialMassOfOilPoint(initialMassOfOilPoint),
-               density(density), position(position), viscosity(viscosity) {}
+               density(density), position(position), viscosity(viscosity), cellPos(pos) {}
 
         double getEvaporatedRatio() const;
         double getEmulsification() const;
-	};
-
-	struct Components{
-	    std::vector<OilComponent> components;
-
-	    Components(const std::vector<OilComponent>& oilComponents): components(oilComponents) {}
 	};
 };
 

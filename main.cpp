@@ -41,17 +41,8 @@ int main(int argc, char** argv)
         }
     }
     sea->setOil(oil);
-
-    for(auto& row : sea->getOil()){
-        for(auto& el : row){
-            std::cout<<el<<" ";
-        }
-        std::cout<<std::endl;
-    }
     sea->update();
-
     std::cout<<"##############################################################################################################################\n";
-
     for(auto& row : sea->getOil()){
         for(auto& el : row){
             std::cout<<el<<" ";

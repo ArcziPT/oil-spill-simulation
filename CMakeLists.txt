@@ -43,11 +43,9 @@ add_executable(OilSpill main.cpp schedulers/CurrentScheduler.cpp schedulers/Curr
         systems/TimeCounter.cpp systems/TimeCounter.h 
         systems/OilPointComponentSystem.cpp systems/OilPointComponentSystem.h 
         systems/ReEntairedSystem.cpp systems/ReEntairedSystem.h 
-        systems/SPreadingSystem.cpp systems/SPreadingSystem.h 
-        statistics/Statistics.cpp statistics/Statistics.h 
-        statistics/StatisticsType.cpp statistics/StatisticsType.h)
+        systems/SPreadingSystem.cpp systems/SPreadingSystem.h)
 #ADD sycl:
-add_sycl_to_target(TARGET OilSpill SOURCES components/EvaporationComponent.cpp)
+add_sycl_to_target(TARGET OilSpill SOURCES systems/ChangeSquareSystem.cpp systems/ReEntairedSystem.cpp components/EvaporationComponent.cpp)
 
 
 message("Root dir: " ${PROJECT_SOURCE_DIR})

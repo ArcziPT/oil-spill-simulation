@@ -16,7 +16,11 @@ private:
 public:
     DispersionComponent(Configurations& config);
 
-    void update(CellGrid& cells, int timestep) override;
+    void update(sycl::queue& queue, CellGrid& cells,
+                sycl::buffer<Cell::Params, 1>& cellParamsBuf,
+                sycl::buffer<OilPoint::Params, 1>& opParamsBuf,
+                sycl::buffer<OilComponent, 2>& opCompBuf,
+                int timestep) override;
 };
 
 

@@ -131,3 +131,7 @@ double Vector2::getX() const {
 double Vector2::getY() const {
     return y;
 }
+
+Vector2 Vector2::operator*(const double &alpha) const {
+    return Vector2(x*alpha, y*alpha);
+}

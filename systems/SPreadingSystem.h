@@ -19,7 +19,11 @@ public:
                                                                                                     config(config),
                                                                                                     timeSystem(timeSystem) {}
 
-    void update(int timestep) override;
+    void update(sycl::queue& queue,
+                sycl::buffer<Cell::Params, 1>& cellParamsBuf,
+                sycl::buffer<OilPoint::Params, 1>& opParamsBuf,
+                sycl::buffer<OilComponent, 2>& opCompBuf,
+                int timestep) override;
 
 private:
     void updatePair(int x1, int y1, int x2, int y2, int timestep, double volume);

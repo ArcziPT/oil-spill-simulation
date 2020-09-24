@@ -20,9 +20,13 @@ OilPointComponentsSystem::OilPointComponentsSystem(std::shared_ptr<Sea> sea, Con
 }
 
 //TODO
-void OilPointComponentsSystem::update(int timestep) {
+void OilPointComponentsSystem::update(sycl::queue& queue,
+                                      sycl::buffer<Cell::Params, 1>& cellParamsBuf,
+                                      sycl::buffer<OilPoint::Params, 1>& opParamsBuf,
+                                      sycl::buffer<OilComponent, 2>& opCompBuf,
+                                      int timestep) {
     for (auto &com : oilComponents) {
-        com->update(cells, timestep);
+        com->update(queue, cells, cellParamsBuf, opParamsBuf, opCompBuf, timestep);
 
         //TODO: some oil points might be removed by component
 //        for(auto& cell : cells){

@@ -3,80 +3,174 @@
 //
 
 #include <random>
+#include <iostream>
 #include "ReEntairedSystem.h"
 
-void ReEntairedSystem::update(int timestep) {
-    int row = cells.getRow();
-    int col = cells.getCol();
-    for (int i = 1; i < row - 1; i++) {
+void ReEntairedSystem::update(sycl::queue &queue,
+                              sycl::buffer<Cell::Params, 1> &cellParamsBuf,
+                              sycl::buffer<OilPoint::Params, 1> &opParamsBuf,
+                              sycl::buffer<OilComponent, 2> &opCompBuf,
+                              int timestep) {
+    sycl::buffer<double, 1> oilMassBuf(sycl::range<1>(cellParamsBuf.get_size()));
 
-        for (int j = 1; j < col - 1; j++) {
-            updateCell(i, j, timestep);
+    //TODO: check
+    {
+        auto opParamsI = opParamsBuf.get_access<sycl::access::mode::read>();
+        auto oilMassO = oilMassBuf.get_access<sycl::access::mode::write>();
+
+        for (int i = 0; i < opParamsBuf.get_count(); i++) {
+            oilMassO[cells.id(opParamsI[i].cellPos)] += opParamsI[i].mass;
         }
     }
-}
+//    queue.submit([&](sycl::handler &cgh) {
+//        auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>(cgh);
+//        auto opParamsI = opParamsBuf.get_access<sycl::access::mode::read>(cgh);
+//        auto opCompIO = opCompBuf.get_access<sycl::access::mode::read_write>(cgh);
+//
+//        auto oilMassO = oilMassBuf.get_access<sycl::access::mode::write>(cgh);
+//
+//        for(int i=0; i<opParamsI.get_size(); i++){
+//            oilMassO[cells.id(opParamsI[i].cellPos)] += opParamsI[i].mass;
+//        }
+//
+//        cgh.parallel_for<class CalcOilMass>(sycl::range<1>(opParamsBuf.get_size()), [=](sycl::id<1> i) {
+//            if(opParamsI[i].removed)
+//                return;
+//
+//            oilMassO[cells.id(opParamsI[i].cellPos)] += opParamsI[i].mass;
+//        });
+//    });
 
-void ReEntairedSystem::updateCell(int x, int y, int timestep) {
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_real_distribution<double> dist(1.0, std::numeric_limits<double>::max());
+    sycl::buffer<bool, 2> tabBuf(sycl::range<2>(cellParamsBuf.get_count(), 4));
 
-    auto& cell = cells.getCellParams(x, y);
-    auto& opParams = cells.getOilPointsParams(x, y);
+    queue.submit([&](sycl::handler &cgh) {
+        auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>(cgh);
+        auto opParamsIO = opParamsBuf.get_access<sycl::access::mode::read_write>(cgh);
 
-    TypeInfo type = cell.type;
-    if (!(type == CellType::SEA) && !(type == CellType::FRAME)) {
-        int row = cell.row;
-        int col = cell.col;
-        double mass = cells.getOil(cells.id(x,y));
-        auto& ops = opParams;
-        if (mass > 0) {
-            bool tab[4];
-            for (bool & i : tab) {
-                i = false;
-            }
+        auto oilMassI = oilMassBuf.get_access<sycl::access::mode::read>(cgh);
+        auto tabIO = tabBuf.get_access<sycl::access::mode::read_write>(cgh);
 
-            int count = 0;
-            if (cells.getCellParams(row - 1, col).type == CellType::SEA) {
-                tab[0] = true;
-                count++;
-            }
-            if (cells.getCellParams(row, col + 1).type == CellType::SEA) {
-                tab[1] = true;
-                count++;
-            }
-            if (cells.getCellParams(row + 1, col).type == CellType::SEA) {
-                tab[2] = true;
-                count++;
-            }
-            if (cells.getCellParams(row, col - 1).type == CellType::SEA) {
-                tab[3] = true;
-                count++;
-            }
+        int row = cells.getRow();
+        int col = cells.getCol();
+        auto id_up = [col](int i) -> int {
+            return i - col;
+        };
+        auto id_down = [col](int i) -> int {
+            return i + col;
+        };
+        auto id_left = [](int i) -> int {
+            return i - 1;
+        };
+        auto id_right = [](int i) -> int {
+            return i + 1;
+        };
 
-            if (count > 0) {
-                double ratio = type.rateConstant() * timestep;
-                for (auto& op : ops) {
-                    if (ratio > dist(mt)) {
-                        while (true) {
-                            int choice = (int)dist(mt) % 4;
-                            if (tab[choice]) {
-                                if (choice == 0) {
-                                    op.position += Vector2(0, -config.cellSize);
-                                } else if (choice == 1) {
-                                    op.position += Vector2(config.cellSize, 0);
-                                } else if (choice == 2) {
-                                    op.position += Vector2(0, config.cellSize);
-                                } else {
-                                    op.position += Vector2(-config.cellSize, 0);
-                                }
-                                break;
-                            }
+        auto equals = [](const TypeInfo &t1, const TypeInfo &t2) -> bool {
+            return t1.halfTime == t2.halfTime &&
+                   (t1.color.r == t2.color.r && t1.color.g == t2.color.g && t1.color.b == t2.color.b);
+        };
+
+        auto seaType = CellType::SEA;
+        cgh.parallel_for<class RESUpdateTab>(sycl::range<2>(cellParamsBuf.get_count(), 4), [=](sycl::id<2> i) {
+            if (oilMassI[i[0]] <= 0)
+                return;
+
+            if (i[1] == 0)
+                tabIO[i[0]][0] = (i[1] / row != 0) ? equals(cellParamsI[id_up(i[0])].type, seaType) : false;
+            else if (i[1] == 1)
+                tabIO[i[0]][1] = (i[1] % col != 0) ? equals(cellParamsI[id_right(i[0])].type, seaType) : false;
+            else if (i[1] == 2)
+                tabIO[i[0]][2] = (i[1] / row != row - 1) ? equals(cellParamsI[id_down(i[0])].type, seaType) : false;
+            else if (i[1] == 3)
+                tabIO[i[0]][3] = (i[1] % col != col - 1) ? equals(cellParamsI[id_left(i[0])].type, seaType) : false;
+        });
+    });
+
+    //TODO: do not copy back
+    sycl::buffer<int, 1> randomChoiceBuf(sycl::range<1>(opParamsBuf.get_count()));
+    sycl::buffer<double, 1> randomRatioBuf(sycl::range<1>(opParamsBuf.get_count()));
+
+    {
+        std::random_device rd1;
+        std::mt19937 mt1(rd1());
+        std::uniform_int_distribution<int> dist1(0, 4);
+
+        std::random_device rd2;
+        std::mt19937 mt2(rd2());
+        std::uniform_real_distribution<double> dist2(0, std::numeric_limits<double>::max());
+
+        auto randomChoiceO = randomChoiceBuf.get_access<sycl::access::mode::write>();
+        auto randomRatioO = randomRatioBuf.get_access<sycl::access::mode::write>();
+
+        for (int i = 0; i < opParamsBuf.get_count(); i++) {
+            randomChoiceO[i] = dist1(mt1);
+            randomRatioO[i] = dist2(mt2);
+        }
+    }
+
+
+    //TODO:
+    {
+        queue.submit([&](sycl::handler &cgh) {
+            auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>(cgh);
+            auto opParamsIO = opParamsBuf.get_access<sycl::access::mode::read_write>(cgh);
+
+            auto oilMassI = oilMassBuf.get_access<sycl::access::mode::read>(cgh);
+            auto tabI = tabBuf.get_access<sycl::access::mode::read>(cgh);
+            auto randomRatioI = randomRatioBuf.get_access<sycl::access::mode::read>(cgh);
+            auto randomChoiceI = randomChoiceBuf.get_access<sycl::access::mode::read>(cgh);
+
+            int col = cells.getCol();
+            auto id = [col](OilPoint::Params::CellPos pos) -> int {
+                return pos.x * col + pos.y;
+            };
+            double log2 = std::log(2);
+            auto rateConstant = [log2](const TypeInfo &t) -> double {
+                return (double) (log2 / (t.halfTime * 3600));
+            };
+            auto addVec = [](Vector2& v1, const Vector2& v2) -> void{
+                v1.x += v2.x;
+                v1.y += v2.y;
+            };
+            auto equals = [](const TypeInfo &t1, const TypeInfo &t2) -> bool {
+                return t1.halfTime == t2.halfTime &&
+                       (t1.color.r == t2.color.r && t1.color.g == t2.color.g && t1.color.b == t2.color.b);
+            };
+
+            auto seaType = CellType::SEA;
+            auto frameType = CellType::FRAME;
+
+            int cellSize = config.cellSize;
+            cgh.parallel_for<class RESUpdateChoice>(sycl::range<1>(opParamsBuf.get_count()), [=](sycl::id<1> i) {
+                if (oilMassI[i] <= 0 || opParamsIO[i].removed)
+                    return;
+
+                auto cell_index = id(opParamsIO[i].cellPos);
+
+                if(equals(cellParamsI[cell_index].type, seaType) || equals(cellParamsI[cell_index].type, frameType))
+                    return;
+
+                if (tabI[i[0]][0] || tabI[i[0]][1] || tabI[i[0]][2] || tabI[i[0]][3]) {
+                    double ratio = rateConstant(cellParamsI[cell_index].type) * timestep;
+                    if (ratio > randomRatioI[cell_index]) {
+                        auto choice = randomChoiceI[i];
+
+                        while (!tabI[i[0]][choice]) {
+                            choice = (choice + 1) % 4;
                         }
 
+                        if (choice == 0) {
+                            addVec(opParamsIO[i].position, Vector2(0, -cellSize));
+                        } else if (choice == 1) {
+                            addVec(opParamsIO[i].position, Vector2(cellSize, 0));
+                        } else if (choice == 2) {
+                            addVec(opParamsIO[i].position, Vector2(0, cellSize));
+                        } else if (choice == 3){
+                            addVec(opParamsIO[i].position, Vector2(-cellSize, 0));
+                        }
                     }
                 }
-            }
-        }
+            });
+        });
     }
 }

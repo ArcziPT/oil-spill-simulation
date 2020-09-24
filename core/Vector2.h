@@ -23,6 +23,7 @@ public:
     Vector2 operator+(const Vector2 &vec) const;
     Vector2 operator-(const Vector2 &vec) const;
     double operator*(const Vector2 &vec) const;
+    Vector2 operator*(const double& alpha) const;
     Vector2 operator*(double alpha) const;
     void operator+=(const Vector2 &vec);
     void operator-=(const Vector2 &vec);
