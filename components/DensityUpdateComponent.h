@@ -11,8 +11,6 @@
 
 class DensityUpdateComponent : public OilPointComponent {
 private:
-
-    static const long serialVersionUID = 7611614141616125901L;
     double densityAt15K;
     double salinity;
     Configurations& config;

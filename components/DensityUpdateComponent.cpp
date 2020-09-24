@@ -44,6 +44,52 @@ DensityUpdateComponent::update(sycl::queue& queue, CellGrid& cells,
                                sycl::buffer<OilPoint::Params, 1>& opParamsBuf,
                                sycl::buffer<OilComponent, 2>& opCompBuf,
                                int timestep) {
+    sycl::buffer<double, 1> oilDensityBuf(sycl::range<1>(cellParamsBuf.get_count()));
+    sycl::buffer<double, 1> waterDensityBuf(sycl::range<1>(cellParamsBuf.get_count()));
+
+    {
+        auto oilDensityO = oilDensityBuf.get_access<sycl::access::mode::write>();
+        auto waterDensityO = waterDensityBuf.get_access<sycl::access::mode::write>();
+        auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>();
+
+        for(int i=0; i<cellParamsBuf.get_count(); i++){
+            oilDensityO[i] = calculateDensity(cellParamsI[i].temperature);
+            waterDensityO[i] = calculateWaterDensity(cellParamsI[i].temperature);
+        }
+    }
+
+    queue.submit([&](sycl::handler& cgh) {
+        auto opParamsIO = opParamsBuf.get_access<sycl::access::mode::read_write>(cgh);
+        auto oilDensityI = oilDensityBuf.get_access<sycl::access::mode::read>(cgh);
+        auto waterDensityI = waterDensityBuf.get_access<sycl::access::mode::read>(cgh);
+
+        auto calcEmulsification = [](const OilPoint::Params& op) -> double{
+            return (op.massOfEmulsion - op.mass) / op.massOfEmulsion;
+        };
+        auto evaporatedRatio = [](const OilPoint::Params& op) -> double{
+            return op.evaporatedMass / op.initialMassOfOilPoint;
+        };
+        int col = cells.getCol();
+        auto id = [col](OilPoint::Params::CellPos pos) -> int{
+            return pos.x * col + pos.y;
+        };
+
+        cgh.parallel_for<class DUCUpdate>(sycl::range<1>(opParamsBuf.get_count()), [=](sycl::id<1> i){
+            auto& op = opParamsIO[i];
+            auto cell_i = id(op.cellPos);
+
+            if(op.removed)
+                return;
+
+            double emulsification = calcEmulsification(op);
+            double evaporationRatio = evaporatedRatio(op);
+            double initialOilDensity = oilDensityI[cell_i];
+            op.density = (1 - emulsification)
+                         * ((0.6 * initialOilDensity - 340) * evaporationRatio + initialOilDensity) +
+                         emulsification * waterDensityI[cell_i];
+        });
+    });
+
 //    auto& cellParams = cells.getCellParams();
 //    auto& opParams = cells.getOilPointsParams();
 //

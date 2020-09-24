@@ -2,6 +2,7 @@
 // Created by arczipt on 24.08.2020.
 //
 
+#include <iostream>
 #include "SPreadingSystem.h"
 
 //double SpreadingSystem::calculateTotalVolume() {
@@ -113,33 +114,23 @@ void SpreadingSystem::update(sycl::queue& queue,
                              sycl::buffer<OilPoint::Params, 1>& opParamsBuf,
                              sycl::buffer<OilComponent, 2>& opCompBuf,
                              int timestep) {
-//    double volume = 0;
-//    auto len = opParamsBuf.get_size();
+    /*auto num_groups = queue.get_device().get_info<cl::sycl::info::device::max_compute_units>();
+    // getting the maximum work group size per thread
+    auto work_group_size = queue.get_device().get_info<cl::sycl::info::device::max_work_group_size>();
+    // building the best number of global thread
+    auto total_threads = num_groups * work_group_size;*/
+//    //TODO: https://developer.codeplay.com/products/computecpp/ce/guides/sycl-for-cuda-developers/examples
+//    {
+//        sycl::buffer<double, 1> resultBuf(&volume, sycl::range<1>(1));
+//        queue.submit([&](sycl::handler& cgh){
+//            auto opParamsI = opParamsBuf.get_access<sycl::access::mode::read>(cgh);
+//            auto resultO = resultBuf.get_access<sycl::access::mode::write>(cgh);
 //
-//    auto num_groups = queue.get_device().get_info<cl::sycl::info::device::max_compute_units>();
-//    // getting the maximum work group size per thread
-//    auto work_group_size = queue.get_device().get_info<cl::sycl::info::device::max_work_group_size>();
-//    // building the best number of global thread
-//    auto total_threads = num_groups * work_group_size;
-//    queue.submit([&](sycl::handler& cgh){
+//            auto local_acc = sycl::accessor<double, 1, sycl::access::mode::read_write, sycl::access::target::local>(opParamsBuf.get_count(), cgh);
 //
 //
-//        cgh.parallel_for(sycl::range<1>(total_threads, work_group_size), [=](sycl::item<1> item_id){
-//            // in_size is equivalent of total number of thread
-//            auto global_id = item_id.get_global_id(0);
-//            auto local_id = item_id.get_local_id(0);
-//            local_acc[local_id] = (global_id < len) ? in_acc[global_id] : 0;
-//            for (auto i = item_id.get_local_range(0) / 2; i > 0; i >>= 1) {
-//                // wait for all thread to put the data in the local memory
-//                item_id.barrier(cl::sycl::access::fence_space::local_space);
-//                // replacing odd threads with contiguous threads
-//                if (local_id < i) local_acc[local_id] += local_acc[local_id + i];
-//            }
-//            if (item_id.get_local_id(0) == 0) {
-//                out_acc[item_id.get_group(0)] = local_acc[0];
-//            }
 //        });
-//    });
+//    }
 
 //    double volume = calculateTotalVolume();
 //    int row = cells.getRow();
