@@ -16,16 +16,11 @@ void EvaporationComponent::update(sycl::queue& queue, CellGrid& cells,
                                   int timestep) {
     //mass loss of every component in oil point
     sycl::buffer<double, 2> lossMassArrayBuf(opCompBuf.get_range());
-    //vapor pressure
-    sycl::buffer<double, 2> vpBuf(opCompBuf.get_range());
     //number of oil points in every cell
     sycl::buffer<int, 1> cellOpNumBuf(sycl::range<1>(cellParamsBuf.get_count()));
     {
-        auto vpO = vpBuf.get_access<sycl::access::mode::write>();
         auto cellOpNumO = cellOpNumBuf.get_access<sycl::access::mode::write>();
-        auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>();
         auto opParamsI = opParamsBuf.get_access<sycl::access::mode::read>();
-        auto opCompI = opCompBuf.get_access<sycl::access::mode::read>();
 
         int col = cells.getCol();
         auto id = [col](OilPoint::Params::CellPos pos) -> int{
@@ -36,14 +31,8 @@ void EvaporationComponent::update(sycl::queue& queue, CellGrid& cells,
             cellOpNumO[i] = 0;
         }
 
-        //TODO: move to kernel
         for(int i=0; i<opParamsBuf.get_count(); i++){
             auto& op = opParamsI[i];
-            auto& cell = cellParamsI[id(op.cellPos)];
-            for(int j=0; j<config.oilComponents.size(); j++){
-                double A = -(4.4 + std::log(opCompI[i][j].tb)) * (1.803 * (opCompI[i][j].tb / cell.temperature - 1) - 0.803 * std::log(opCompI[i][j].tb / cell.temperature));
-                vpO[i][j] = (double) (100000 * std::exp(A)); // Vapor pressure
-            }
             cellOpNumO[id(op.cellPos)]++;
         }
     }
@@ -53,7 +42,6 @@ void EvaporationComponent::update(sycl::queue& queue, CellGrid& cells,
         auto opParamsIO = opParamsBuf.get_access<sycl::access::mode::read_write>(cgh);
         auto opCompIO = opCompBuf.get_access<sycl::access::mode::read_write>(cgh);
         auto lossMassArrayIO = lossMassArrayBuf.get_access<sycl::access::mode::read_write>(cgh);
-        auto vpI = vpBuf.get_access<sycl::access::mode::read>(cgh);
         auto cellOpNumI = cellOpNumBuf.get_access<sycl::access::mode::read>(cgh);
 
         int col = cells.getCol();
@@ -85,7 +73,9 @@ void EvaporationComponent::update(sycl::queue& queue, CellGrid& cells,
 
                 if (x != 0) {
                     double molecularWeigth = opCompIO[i[0]][j].molecularWeigth;
-                    double lossmass = (K * molecularWeigth * vpI[i[0]][j] * x / (R * temp)
+                    double A = -(4.4 + sycl::log(opCompIO[i[0]][j].tb)) * (1.803 * (opCompIO[i[0]][j].tb / temp - 1) - 0.803 * sycl::log(opCompIO[i[0]][j].tb / temp));
+                    double P = (double) (100000 * sycl::exp(A)); // Vapor pressure
+                    double lossmass = (K * molecularWeigth * P * x / (R * temp)
                                        * timestep * (cellSize * cellSize)) / cellOpNumI[id(op.cellPos)]; //number of oilPoints in cell
                     lossMassArrayIO[i[0]][j] = lossmass;
                 } else {

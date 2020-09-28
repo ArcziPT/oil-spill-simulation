@@ -23,7 +23,7 @@ int main(int argc, char** argv)
     config.viscosityParameter = 10;
     config.oilWaterTension = 30;
     config.minSlickThickness = 0.03;
-    config.simulationTime = 100;
+    config.simulationTime = 600;
     config.oilComponents = {
             OilComponent(0.25, 45.02/1000, 313),
             OilComponent(0.25, 45.02/1000, 313),
@@ -46,7 +46,7 @@ int main(int argc, char** argv)
         auto begin = std::chrono::high_resolution_clock::now();
         sea->update();
         auto end = std::chrono::high_resolution_clock::now();
-        std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count()/1000000 << "ms" << std::endl;
+        std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end-begin).count()<< "ms" << std::endl;
     }
 
     std::cout<<"##############################################################################################################################\n";

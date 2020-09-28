@@ -123,7 +123,11 @@ void Sea::update()
 
     for (auto& system : systems)
     {
+        auto beg = std::chrono::high_resolution_clock::now();
         system->update(*queuePtr, *cellBufferPtr, *opBufferPtr, *componentBufferPtr, timestep);
+        queuePtr->wait();
+        auto end = std::chrono::high_resolution_clock::now();
+        std::cout<<"system="<<std::chrono::duration_cast<std::chrono::milliseconds>(end-beg).count()<<"ms"<<std::endl;
     }
     timeCounter.update(timestep);
     //statistics.update(timeCounter, cells);
