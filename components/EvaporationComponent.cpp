@@ -14,10 +14,12 @@ void EvaporationComponent::update(sycl::queue& queue, CellGrid& cells,
                                   sycl::buffer<OilPoint::Params, 1>& opParamsBuf,
                                   sycl::buffer<OilComponent, 2>& opCompBuf,
                                   int timestep) {
+    //mass loss of every component in oil point
     sycl::buffer<double, 2> lossMassArrayBuf(opCompBuf.get_range());
+    //vapor pressure
     sycl::buffer<double, 2> vpBuf(opCompBuf.get_range());
+    //number of oil points in every cell
     sycl::buffer<int, 1> cellOpNumBuf(sycl::range<1>(cellParamsBuf.get_count()));
-
     {
         auto vpO = vpBuf.get_access<sycl::access::mode::write>();
         auto cellOpNumO = cellOpNumBuf.get_access<sycl::access::mode::write>();
@@ -30,11 +32,11 @@ void EvaporationComponent::update(sycl::queue& queue, CellGrid& cells,
             return pos.x * col + pos.y;
         };
 
-        //TODO:
         for(int i=0; i<cellParamsBuf.get_count(); i++){
             cellOpNumO[i] = 0;
         }
 
+        //TODO: move to kernel
         for(int i=0; i<opParamsBuf.get_count(); i++){
             auto& op = opParamsI[i];
             auto& cell = cellParamsI[id(op.cellPos)];

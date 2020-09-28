@@ -5,14 +5,6 @@
 #include <iostream>
 #include "SPreadingSystem.h"
 
-/*
- * TODO: for every direction (right and down) submit two jobs:
- *  - 0->1 2->3 4->5 .... and op update
- *  - wait to finish
- *  - 1->2 3->4 5->6 .... and op update
- *  - wait to finish
- */
-
 struct data{
     int ti;
     int fi;
@@ -28,12 +20,17 @@ void SpreadingSystem::update(sycl::queue& queue,
                              sycl::buffer<OilPoint::Params, 1>& opParamsBuf,
                              sycl::buffer<OilComponent, 2>& opCompBuf,
                              int timestep) {
+    //mass of emulsion in every cell
     sycl::buffer<double, 1> massOfEmulsionBuf(sycl::range<1>(cellParamsBuf.get_count()));
+    //oil density for every cell
     sycl::buffer<double, 1> oilDensityBuf(sycl::range<1>(cellParamsBuf.get_count()));
+    //volume of emulsion in every cell
     sycl::buffer<double, 1> volumeBuf(sycl::range<1>(cellParamsBuf.get_count()));
+    //random ratio for every oil point used later
     sycl::buffer<double, 1> randomRatioBuf(sycl::range<1>(opParamsBuf.get_count()));
     double volume = 0;
 
+    //Calculate massOfEmulsion, oilDensity and init randomRatio, because porting to GPU code is not that simple
     {
         auto massOfEmulsionO = massOfEmulsionBuf.get_access<sycl::access::mode::write>();
         auto oilDensityO = oilDensityBuf.get_access<sycl::access::mode::write>();
@@ -57,8 +54,10 @@ void SpreadingSystem::update(sycl::queue& queue,
         }
     }
 
+    //temporary
     sycl::buffer<data, 1> dataBuf(sycl::range<1>(cellParamsBuf.get_count()));
 
+    //functions used on gpu cores
     auto calcWaterDynamicViscosity = [](double T, double S) -> double{
         S = S / 1000;
         T -= 273.15;
@@ -104,6 +103,15 @@ void SpreadingSystem::update(sycl::queue& queue,
     };
 
     double time = timeSystem.totalTime + timestep/ 2;
+    /*
+     * TODO: refactor
+     * For every direction (right and down) submit two jobs:
+     *  - 0->1 2->3 4->5 .... and op update
+     *  - wait to finish
+     *  - 1->2 3->4 5->6 .... and op update
+     *  - wait to finish
+     */
+
     /**
      * dx=1
      * dy=0
@@ -135,6 +143,7 @@ void SpreadingSystem::update(sycl::queue& queue,
                  if (cell.row == rows - 1 || cell.row % 2 != 0)
                      return;
 
+                 //second cell
                  auto n_i = i[0] + cols;
                  auto &cell2 = cellParamsI[n_i];
 

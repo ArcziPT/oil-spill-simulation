@@ -22,6 +22,12 @@ namespace Cell
     };
 };
 
+/**
+ * Simulation data proxy.
+ *
+ * Manages cells', oil points' and theirs components' data.
+ * Storing it continuously in vector enables better cooperation with SyCL.
+ */
 class CellGrid{
 public:
     CellGrid(Configurations& config): config(config) {}

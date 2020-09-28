@@ -43,42 +43,6 @@ void ChangeSquareSystem::update(sycl::queue& queue,
             op.cellPos.y = c1*c2*newCol + (!c1)*op.cellPos.y;
 
             op.removed = (c1 & !c2);
-
-//            if (newRow != row || newCol != col) {
-//                if (newRow < cells.getRow() && newRow > 0 && newCol < cells.getCol() && newCol > 0) {
-//                    op.cellPos.x = newRow;
-//                    op.cellPos.y = newCol;
-//                }else{
-//                    op.removed = true;
-//                }
-//            }
         });
     });
 }
-
-/**
- * Return true if OilPoint should be removed.
- *
- * @param cell
- * @param i
- */
-//bool ChangeSquareSystem::update(int x, int y, int i) {
-//    auto& op = cells.getOilPointsParams(x,y)[i];
-//    Vector2 position = op.position;
-//    double posX = position.getX();
-//    double posY = position.getY();
-//    int row = x;
-//    int col = y;
-//
-//    int newRow = (int) (posY / config.cellSize);
-//    int newCol = (int) (posX / config.cellSize);
-//
-//    if (newRow != row || newCol != col) {
-//        if (newRow < cells.getRow() && newRow > 0 && newCol < cells.getCol() && newCol > 0) {
-//            cells.getOilPointsParams(x,y).push_back(op);
-//            cells.copyOilPoint(x, y, i, newRow, newCol);
-//        }
-//        return true;
-//    }
-//    return false;
-//}

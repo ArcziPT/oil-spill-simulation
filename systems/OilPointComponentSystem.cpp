@@ -27,15 +27,5 @@ void OilPointComponentsSystem::update(sycl::queue& queue,
                                       int timestep) {
     for (auto &com : oilComponents) {
         com->update(queue, cells, cellParamsBuf, opParamsBuf, opCompBuf, timestep);
-
-        //TODO: some oil points might be removed by component
-//        for(auto& cell : cells){
-//            std::vector<OilPoint> oilPoints{};
-//            for (auto &op : cell.oilPoints) {
-//                if (!op.removed)
-//                    oilPoints.push_back(op);
-//            }
-//            cell.oilPoints = std::move(oilPoints);
-//        }
     }
 }

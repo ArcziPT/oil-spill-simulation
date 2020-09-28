@@ -11,9 +11,10 @@ void ReEntairedSystem::update(sycl::queue &queue,
                               sycl::buffer<OilPoint::Params, 1> &opParamsBuf,
                               sycl::buffer<OilComponent, 2> &opCompBuf,
                               int timestep) {
+    //mass of oil in every cell
     sycl::buffer<double, 1> oilMassBuf(sycl::range<1>(cellParamsBuf.get_size()));
 
-    //TODO: check
+    //caluclate mass of oilMass
     {
         auto opParamsI = opParamsBuf.get_access<sycl::access::mode::read>();
         auto oilMassO = oilMassBuf.get_access<sycl::access::mode::write>();
@@ -22,24 +23,6 @@ void ReEntairedSystem::update(sycl::queue &queue,
             oilMassO[cells.id(opParamsI[i].cellPos)] += opParamsI[i].mass;
         }
     }
-//    queue.submit([&](sycl::handler &cgh) {
-//        auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>(cgh);
-//        auto opParamsI = opParamsBuf.get_access<sycl::access::mode::read>(cgh);
-//        auto opCompIO = opCompBuf.get_access<sycl::access::mode::read_write>(cgh);
-//
-//        auto oilMassO = oilMassBuf.get_access<sycl::access::mode::write>(cgh);
-//
-//        for(int i=0; i<opParamsI.get_size(); i++){
-//            oilMassO[cells.id(opParamsI[i].cellPos)] += opParamsI[i].mass;
-//        }
-//
-//        cgh.parallel_for<class CalcOilMass>(sycl::range<1>(opParamsBuf.get_size()), [=](sycl::id<1> i) {
-//            if(opParamsI[i].removed)
-//                return;
-//
-//            oilMassO[cells.id(opParamsI[i].cellPos)] += opParamsI[i].mass;
-//        });
-//    });
 
     sycl::buffer<bool, 2> tabBuf(sycl::range<2>(cellParamsBuf.get_count(), 4));
 
@@ -52,6 +35,10 @@ void ReEntairedSystem::update(sycl::queue &queue,
 
         int row = cells.getRow();
         int col = cells.getCol();
+
+        /**
+         * Function returning index of the next cell (up, down, left, right)
+         */
         auto id_up = [col](int i) -> int {
             return i - col;
         };
@@ -71,6 +58,7 @@ void ReEntairedSystem::update(sycl::queue &queue,
         };
 
         auto seaType = CellType::SEA;
+        //For every cell's up,down,left and right neighbours
         cgh.parallel_for<class RESUpdateTab>(sycl::range<2>(cellParamsBuf.get_count(), 4), [=](sycl::id<2> i) {
             if (oilMassI[i[0]] <= 0)
                 return;
@@ -86,10 +74,9 @@ void ReEntairedSystem::update(sycl::queue &queue,
         });
     });
 
-    //TODO: do not copy back
+    //init random values
     sycl::buffer<int, 1> randomChoiceBuf(sycl::range<1>(opParamsBuf.get_count()));
     sycl::buffer<double, 1> randomRatioBuf(sycl::range<1>(opParamsBuf.get_count()));
-
     {
         std::random_device rd1;
         std::mt19937 mt1(rd1());
@@ -109,7 +96,6 @@ void ReEntairedSystem::update(sycl::queue &queue,
     }
 
 
-    //TODO:
     {
         queue.submit([&](sycl::handler &cgh) {
             auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>(cgh);
