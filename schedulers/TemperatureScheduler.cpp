@@ -30,3 +30,7 @@ TemperatureScheduler::TemperatureScheduler(std::shared_ptr<Sea> sea) : Scheduler
 {
 
 }
+
+UpdateSubject TemperatureScheduler::getUpdateSubject(int iteration) {
+    return UpdateSubject::TEMP;
+}

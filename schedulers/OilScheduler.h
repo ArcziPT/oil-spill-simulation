@@ -14,6 +14,7 @@ public:
     OilScheduler(std::shared_ptr<Sea> sea);
     void update(int iteration) override;
     void add(int iteration, GridValuesType<double> &array) override;
+    UpdateSubject getUpdateSubject(int iteration) override;
 };
 
 

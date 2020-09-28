@@ -33,3 +33,7 @@ void CurrentScheduler::add(int iteration, GridValuesType<double> &array)
     }
     map[iteration] = array;
 }
+
+UpdateSubject CurrentScheduler::getUpdateSubject(int iteration){
+    return UpdateSubject::CURRENT;
+}

@@ -6,6 +6,8 @@
 #include "Vector2.h"
 #include "OilPoint.h"
 
+#include <CL/sycl.hpp>
+
 namespace Cell
 {
     struct Params{

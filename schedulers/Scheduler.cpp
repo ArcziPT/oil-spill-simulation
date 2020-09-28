@@ -13,3 +13,7 @@ void Scheduler::remove(int iteration)
 {
     map.erase(iteration);
 }
+
+bool Scheduler::isThereUpdate(int iteration) {
+    return map.count(iteration) != 0;
+}

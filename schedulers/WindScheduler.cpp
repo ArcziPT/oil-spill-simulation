@@ -30,3 +30,7 @@ WindScheduler::WindScheduler(std::shared_ptr<Sea> sea) : Scheduler(sea)
 {
 
 }
+
+UpdateSubject WindScheduler::getUpdateSubject(int iteration) {
+    return UpdateSubject::WIND;
+}

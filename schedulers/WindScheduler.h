@@ -14,6 +14,7 @@ public:
     WindScheduler(std::shared_ptr<Sea> sea);
     void add(int iteration, GridValuesType<double> &array) override;
     void update(int iteration) override;
+    UpdateSubject getUpdateSubject(int iteration) override;
 };
 
 

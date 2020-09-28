@@ -16,6 +16,7 @@ std::shared_ptr<Sea> Sea::getSea() {
 }
 
 void Sea::init(){
+    //init systems and schedulers
      systems.push_back(std::unique_ptr<OilSystem>(new SpreadingSystem(cells, config, timeCounter)));
      systems.push_back(std::unique_ptr<OilSystem>(new ReEntairedSystem(cells, config)));
      systems.push_back(std::unique_ptr<OilSystem>(new OilPointComponentsSystem(getSea(), config)));
@@ -96,30 +97,20 @@ void Sea::reset()
 
 void Sea::update()
 {
-    auto& cellParams = cells.getCellParams();
-    auto& opParams = cells.getOilPointsParams();
-    auto& opComp = cells.getOilPointsComponents();
-
-    sycl::buffer<Cell::Params, 1> cellParamsBuf(cellParams.data(), sycl::range<1>(cellParams.size()));
-    sycl::buffer<OilPoint::Params, 1> opParamsBuf(opParams.data(), sycl::range<1>(opParams.size()));
-    sycl::buffer<OilComponent, 2> opCompBuf(opComp.data(), sycl::range<2>(opParams.size(), config.oilComponents.size()));
-
-    auto exception_handler = [] (sycl::exception_list exceptions) {
-        for (std::exception_ptr const& e : exceptions) {
-            try {
-                std::rethrow_exception(e);
-            } catch(sycl::exception const& e) {
-                std::cout << "Caught asynchronous SYCL exception:\n"
-                          << e.what() << std::endl;
-            }
-        }
-    };
-
-    sycl::queue queue(sycl::default_selector{}, exception_handler);
+    createCellBuffer();
+    createOpBuffer();
+    createCompBuffer();
+    createQueue();
 
     if (timeCounter.totalTime > config.simulationTime)
     {
         setFinished(true);
+
+        opBufferPtr.reset(nullptr);
+        cellBufferPtr.reset(nullptr);
+        componentBufferPtr.reset(nullptr);
+        queuePtr.reset(nullptr);
+
         return;
     }
 
@@ -132,11 +123,78 @@ void Sea::update()
 
     for (auto& system : systems)
     {
-        system->update(queue, cellParamsBuf, opParamsBuf, opCompBuf, timestep);
+        system->update(*queuePtr, *cellBufferPtr, *opBufferPtr, *componentBufferPtr, timestep);
     }
     timeCounter.update(timestep);
     //statistics.update(timeCounter, cells);
-    schedulersController->update(timeCounter.iteration);
+
+    //if there is an update destroy right buffer (make sycl write data back to origin) and push new data
+    auto subjects = schedulersController->getUpdateSubjects(timeCounter.iteration);
+    if(!subjects.empty()){
+        //destroy buffers
+        for(auto& subject : subjects){
+            switch (subject) {
+                case UpdateSubject::OIL:
+                    opBufferPtr.reset(nullptr);
+                    componentBufferPtr.reset(nullptr);
+                    break;
+                case UpdateSubject::WIND:
+                case UpdateSubject::TEMP:
+                case UpdateSubject::CURRENT:
+                    cellBufferPtr.reset(nullptr);
+                    break;
+            }
+        }
+
+        //update
+        schedulersController->update(timeCounter.iteration);
+
+        //create buffers
+        for(auto& subject : subjects){
+            switch (subject) {
+                case UpdateSubject::OIL:
+                    createOpBuffer();
+                    createCompBuffer();
+                    break;
+                case UpdateSubject::WIND:
+                case UpdateSubject::TEMP:
+                case UpdateSubject::CURRENT:
+                    createCellBuffer();
+                    break;
+            }
+        }
+    }
+}
+
+void Sea::createCellBuffer(){
+    if(cellBufferPtr != nullptr)
+        return;
+
+    auto& cellParams = cells.getCellParams();
+    cellBufferPtr = CellBufferPtr(new sycl::buffer<Cell::Params, 1>(cellParams.data(), sycl::range<1>(cellParams.size())));
+}
+
+void Sea::createOpBuffer(){
+    if(opBufferPtr != nullptr)
+        return;
+
+    auto& opParams = cells.getOilPointsParams();
+    opBufferPtr = OpBufferPtr(new sycl::buffer<OilPoint::Params, 1>(opParams.data(), sycl::range<1>(opParams.size())));
+}
+
+void Sea::createCompBuffer(){
+    if(componentBufferPtr != nullptr)
+        return;
+
+    auto& opComponents = cells.getOilPointsComponents();
+    componentBufferPtr = ComponentBufferPtr(new sycl::buffer<OilComponent, 2>(opComponents.data(), sycl::range<2>(opComponents.size()/config.oilComponents.size(), config.oilComponents.size())));
+}
+
+void Sea::createQueue() {
+    if(queuePtr != nullptr)
+        return;
+
+    queuePtr = QueuePtr(new sycl::queue);
 }
 
 bool Sea::isFinished()

@@ -26,6 +26,17 @@ void SchedulersController::update(int iteration)
     }
 }
 
+std::vector<UpdateSubject> SchedulersController::getUpdateSubjects(int iteration) {
+    std::vector<UpdateSubject> subjects;
+
+    for(auto& it : this->schedulersMap){
+        if(it.second->isThereUpdate(iteration)){
+            subjects.push_back(it.second->getUpdateSubject(iteration));
+        }
+    }
+    return subjects;
+}
+
 void SchedulersController::initializeSchedulersMap()
 {
     schedulersMap[EditItem::CURRENT] = std::unique_ptr<CurrentScheduler>(new CurrentScheduler(sea));

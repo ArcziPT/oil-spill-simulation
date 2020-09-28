@@ -16,6 +16,8 @@ class Scheduler;
 
 typedef std::unordered_map<EditItem, std::unique_ptr<Scheduler>> SchedulerMap;
 
+enum class UpdateSubject;
+
 class SchedulersController
 {
 private:
@@ -26,9 +28,12 @@ public:
     SchedulersController(std::shared_ptr<Sea> sea);
     SchedulerMap& getSchedulersMap();
     void update(int iteration);
+
+    //returns vectors of objects, which will be updated in current iteration
+    std::vector<UpdateSubject> getUpdateSubjects(int iteration);
+
 private:
     void initializeSchedulersMap();
-    
 };
 
 

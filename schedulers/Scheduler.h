@@ -12,6 +12,13 @@
 
 class Sea;
 
+enum class UpdateSubject{
+    OIL,
+    WIND,
+    TEMP,
+    CURRENT
+};
+
 class Scheduler
 {
 protected:
@@ -23,6 +30,8 @@ public:
     virtual void add(int iteration, GridValuesType<double>& array) = 0;
     void remove(int iteration);
     virtual void update(int iteration) = 0;
+    virtual bool isThereUpdate(int iteration);
+    virtual UpdateSubject getUpdateSubject(int iteration) = 0;
 };
 
 #endif //OIL_SPILL_SIMULATION_SCHEDULER_H

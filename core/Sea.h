@@ -14,6 +14,11 @@
 
 class SchedulersController;
 
+using CellBufferPtr = std::unique_ptr<sycl::buffer<Cell::Params, 1>>;
+using OpBufferPtr = std::unique_ptr<sycl::buffer<OilPoint::Params, 1>>;
+using ComponentBufferPtr = std::unique_ptr<sycl::buffer<OilComponent, 2>>;
+using QueuePtr = std::unique_ptr<sycl::queue>;
+
 /**
  * Before using call init()
  */
@@ -56,6 +61,16 @@ private:
     int cols;
     int rows;
     bool finished = false;
+
+    CellBufferPtr cellBufferPtr = nullptr;
+    OpBufferPtr opBufferPtr = nullptr;
+    ComponentBufferPtr componentBufferPtr = nullptr;
+    QueuePtr queuePtr;
+
+    void createCellBuffer();
+    void createOpBuffer();
+    void createCompBuffer();
+    void createQueue();
 };
 
 #endif

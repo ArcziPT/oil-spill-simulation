@@ -31,3 +31,7 @@ OilScheduler::OilScheduler(std::shared_ptr<Sea> sea) : Scheduler(sea)
 {
 
 }
+
+UpdateSubject OilScheduler::getUpdateSubject(int iteration) {
+    return UpdateSubject::OIL;
+}
