@@ -89,19 +89,4 @@ DensityUpdateComponent::update(sycl::queue& queue, CellGrid& cells,
                          emulsification * waterDensityI[cell_i];
         });
     });
-
-//    auto& cellParams = cells.getCellParams();
-//    auto& opParams = cells.getOilPointsParams();
-//
-//    for (int i=0; i<cellParams.size(); i++) {
-//        auto& cell = cellParams[i];
-//        for (auto &op : opParams[i]) {
-//            double emulsification = op.getEmulsification();
-//            double evaporationRatio = op.getEvaporatedRatio();
-//            double initialOilDensity = calculateDensity(cell.temperature);
-//            op.density = (1 - emulsification)
-//                         * ((0.6 * initialOilDensity - 340) * evaporationRatio + initialOilDensity) +
-//                         emulsification * calculateWaterDensity(cell.temperature);
-//        }
-//    }
 }

@@ -23,7 +23,7 @@ int main(int argc, char** argv)
     config.viscosityParameter = 10;
     config.oilWaterTension = 30;
     config.minSlickThickness = 0.03;
-    config.simulationTime = 600;
+    config.simulationTime = 60;
     config.oilComponents = {
             OilComponent(0.25, 45.02/1000, 313),
             OilComponent(0.25, 45.02/1000, 313),
@@ -41,6 +41,14 @@ int main(int argc, char** argv)
         }
     }
     sea->setOil(oil);
+    auto wind = GridValuesType<double>(2*148, std::vector<double>(2*148, 0));
+    for(int i=0; i<2*148; i++){
+        for(int j=0; j<2*148; j+=2){
+            wind[i][j] = 5;
+            wind[i][j+1] = 7;
+        }
+    }
+    sea->setWind(wind);
 
     while(!sea->isFinished()){
         auto begin = std::chrono::high_resolution_clock::now();
