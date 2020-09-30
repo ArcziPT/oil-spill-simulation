@@ -210,7 +210,6 @@ void CellGrid::setOil(int x, int y, double mass)
  		cellsOilPointsParams.emplace_back(OilPoint::Params(
  		        config.initialMassOfOilPoint,
  		        config.initialMassOfOilPoint,
-                config.initialMassOfOilPoint,
  		        Vector2(px, py),
  		        config.initialDensityOfOilPoint,
  		        config.viscosity,
@@ -252,16 +251,11 @@ void CellGrid::setOil(std::vector<std::vector<double>> oil) {
 }
 
 std::vector<std::vector<double>> CellGrid::getOil() {
-    int c = 0;
-    auto ret = std::vector<std::vector<double>>(row, std::vector<double>(col, 0));
+    auto ret = std::vector<std::vector<double>>(row-2, std::vector<double>(col-2, 0));
     for(auto& opParam : cellsOilPointsParams){
         if(!opParam.removed)
-            ret[opParam.cellPos.x][opParam.cellPos.y] += opParam.mass;
-        else
-            c++;
+            ret[opParam.cellPos.x-1][opParam.cellPos.y-1] += opParam.mass;
     }
-
-    std::cout<<"removed="<<c<<std::endl;
 
     return ret;
 }
@@ -307,6 +301,25 @@ std::vector<Cell::Params> &CellGrid::getCellParams() {
 }
 
 std::vector<OilPoint::Params> &CellGrid::getOilPointsParams() {
+    //remove unused oilPoints
+    std::vector<OilPoint::Params> newParams;
+    std::vector<OilComponent> newComp;
+
+    for(int i=0; i<cellsOilPointsParams.size(); i++){
+        auto& op = cellsOilPointsParams[i];
+
+        if(!op.removed){
+            newParams.emplace_back(std::move(op));
+
+            for(int j=i; j<i+config.oilComponents.size(); j++){
+                newComp.emplace_back(cellsOilPointsComponents[j]);
+            }
+        }
+    }
+
+    cellsOilPointsParams = newParams;
+    cellsOilPointsComponents = newComp;
+
     return cellsOilPointsParams;
 }
 

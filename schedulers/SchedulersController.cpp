@@ -11,7 +11,7 @@
 
 SchedulersController::SchedulersController(std::shared_ptr<Sea> _sea): sea(_sea)
 {
-
+    initializeSchedulersMap();
 }
 
 SchedulerMap &SchedulersController::getSchedulersMap()

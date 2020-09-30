@@ -48,8 +48,9 @@ void EvaporationComponent::update(sycl::queue& queue, CellGrid& cells,
         auto id = [col](OilPoint::Params::CellPos pos) -> int{
             return pos.x * col + pos.y;
         };
-        auto evaporatedRatio = [](const OilPoint::Params& op) -> double{
-            return op.evaporatedMass / op.initialMassOfOilPoint;
+        auto initialMassOfOilPoint = config.initialMassOfOilPoint;
+        auto evaporatedRatio = [initialMassOfOilPoint](const OilPoint::Params& op) -> double{
+            return op.evaporatedMass / initialMassOfOilPoint;
         };
 
         int cellSize = config.cellSize;

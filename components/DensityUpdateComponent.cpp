@@ -66,8 +66,9 @@ DensityUpdateComponent::update(sycl::queue& queue, CellGrid& cells,
         auto calcEmulsification = [](const OilPoint::Params& op) -> double{
             return (op.massOfEmulsion - op.mass) / op.massOfEmulsion;
         };
-        auto evaporatedRatio = [](const OilPoint::Params& op) -> double{
-            return op.evaporatedMass / op.initialMassOfOilPoint;
+        auto initialMassOfOilPoint = config.initialMassOfOilPoint;
+        auto evaporatedRatio = [initialMassOfOilPoint](const OilPoint::Params& op) -> double{
+            return op.evaporatedMass / initialMassOfOilPoint;
         };
         int col = cells.getCol();
         auto id = [col](OilPoint::Params::CellPos pos) -> int{

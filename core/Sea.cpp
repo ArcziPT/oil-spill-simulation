@@ -52,6 +52,9 @@ void Sea::setOil(const GridValuesType<double>& array)
 
 GridValuesType<double> Sea::getOil()
 {
+    componentBufferPtr.reset(nullptr);
+    opBufferPtr.reset(nullptr);
+
     return cells.getOil();
 }
 
@@ -97,6 +100,28 @@ void Sea::reset()
 
 void Sea::update()
 {
+    //if there is an update destroy right buffer (make sycl write data back to origin) and push new data
+    auto subjects = schedulersController->getUpdateSubjects(timeCounter.iteration);
+    if(!subjects.empty()){
+        //destroy buffers
+        for(auto& subject : subjects){
+            switch (subject) {
+                case UpdateSubject::OIL:
+                    opBufferPtr.reset(nullptr);
+                    componentBufferPtr.reset(nullptr);
+                    break;
+                case UpdateSubject::WIND:
+                case UpdateSubject::TEMP:
+                case UpdateSubject::CURRENT:
+                    cellBufferPtr.reset(nullptr);
+                    break;
+            }
+        }
+
+        //update
+        schedulersController->update(timeCounter.iteration);
+    }
+
     createCellBuffer();
     createOpBuffer();
     createCompBuffer();
@@ -123,51 +148,25 @@ void Sea::update()
 
     for (auto& system : systems)
     {
-        auto beg = std::chrono::high_resolution_clock::now();
+        /*opBufferPtr.reset(nullptr);
+        auto oil = cells.getOil();
+        createOpBuffer();*/
         system->update(*queuePtr, *cellBufferPtr, *opBufferPtr, *componentBufferPtr, timestep);
-        queuePtr->wait();
-        auto end = std::chrono::high_resolution_clock::now();
-        std::cout<<"system="<<std::chrono::duration_cast<std::chrono::milliseconds>(end-beg).count()<<"ms"<<std::endl;
+        /*opBufferPtr.reset(nullptr);
+        auto oil2 = cells.getOil();
+        int c = 0;
+        for(int i=0; i<oil2.size(); i++){
+            for(int j=0; j<oil2[i].size(); j++){
+                if(std::abs(oil2[i][j] - oil[i][j]) > 1)
+                    c++;
+            }
+        }
+        std::cout<<"c="<<c<<" ";
+        createOpBuffer();*/
     }
+    std::cout<<std::endl;
     timeCounter.update(timestep);
     //statistics.update(timeCounter, cells);
-
-    //if there is an update destroy right buffer (make sycl write data back to origin) and push new data
-    auto subjects = schedulersController->getUpdateSubjects(timeCounter.iteration);
-    if(!subjects.empty()){
-        //destroy buffers
-        for(auto& subject : subjects){
-            switch (subject) {
-                case UpdateSubject::OIL:
-                    opBufferPtr.reset(nullptr);
-                    componentBufferPtr.reset(nullptr);
-                    break;
-                case UpdateSubject::WIND:
-                case UpdateSubject::TEMP:
-                case UpdateSubject::CURRENT:
-                    cellBufferPtr.reset(nullptr);
-                    break;
-            }
-        }
-
-        //update
-        schedulersController->update(timeCounter.iteration);
-
-        //create buffers
-        for(auto& subject : subjects){
-            switch (subject) {
-                case UpdateSubject::OIL:
-                    createOpBuffer();
-                    createCompBuffer();
-                    break;
-                case UpdateSubject::WIND:
-                case UpdateSubject::TEMP:
-                case UpdateSubject::CURRENT:
-                    createCellBuffer();
-                    break;
-            }
-        }
-    }
 }
 
 void Sea::createCellBuffer(){

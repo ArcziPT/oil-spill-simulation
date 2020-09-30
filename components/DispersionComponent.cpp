@@ -36,8 +36,9 @@ void DispersionComponent::update(sycl::queue& queue, CellGrid& cells,
         auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>(cgh);
         auto cellVolI = cellVolBuf.get_access<sycl::access::mode::read>(cgh);
 
-        auto evaporatedRatio = [](const OilPoint::Params& op) -> double{
-            return op.evaporatedMass / op.initialMassOfOilPoint;
+        auto initialMassOfOilPoint = config.initialMassOfOilPoint;
+        auto evaporatedRatio = [initialMassOfOilPoint](const OilPoint::Params& op) -> double{
+            return op.evaporatedMass / initialMassOfOilPoint;
         };
 
         int col = cells.getCol();

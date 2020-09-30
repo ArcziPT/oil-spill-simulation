@@ -43,7 +43,7 @@ add_executable(OilSpill main.cpp schedulers/CurrentScheduler.cpp schedulers/Curr
         systems/TimeCounter.cpp systems/TimeCounter.h 
         systems/OilPointComponentSystem.cpp systems/OilPointComponentSystem.h 
         systems/ReEntairedSystem.cpp systems/ReEntairedSystem.h 
-        systems/SPreadingSystem.cpp systems/SPreadingSystem.h)
+        systems/SPreadingSystem.cpp systems/SPreadingSystem.h Simulation.cpp Simulation.h util/ArrayReader.cpp util/ArrayReader.h)
 #ADD sycl:
 add_sycl_to_target(TARGET OilSpill SOURCES systems/ChangeSquareSystem.cpp systems/ReEntairedSystem.cpp components/EvaporationComponent.cpp components/DispersionComponent.cpp components/ViscosityUpdateComponent.cpp components/DensityUpdateComponent.cpp components/EmulsificationComponent.cpp systems/SPreadingSystem.cpp)
 

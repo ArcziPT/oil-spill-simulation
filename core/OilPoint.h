@@ -22,8 +22,6 @@ namespace OilPoint
         double viscosity;
         double dispersedMass = 0;
 
-        double initialMassOfOilPoint;
-
         struct CellPos{
             int x;
             int y;
@@ -32,14 +30,14 @@ namespace OilPoint
         CellPos cellPos;
         bool removed = false;
 
-        Params(double mass, double massOfEmulsion, double initialMassOfOilPoint,
+        Params(double mass, double massOfEmulsion,
                const Vector2& position, double density,
                double viscosity, CellPos pos)
-               : mass(mass), massOfEmulsion(massOfEmulsion), initialMassOfOilPoint(initialMassOfOilPoint),
+               : mass(mass), massOfEmulsion(massOfEmulsion),
                density(density), position(position), viscosity(viscosity), cellPos(pos) {}
 
-        double getEvaporatedRatio() const;
-        double getEmulsification() const;
+        /*double getEvaporatedRatio() const;
+        double getEmulsification() const;*/
 	};
 };
 
