@@ -33,7 +33,8 @@ void EvaporationComponent::update(sycl::queue& queue, CellGrid& cells,
 
         for(int i=0; i<opParamsBuf.get_count(); i++){
             auto& op = opParamsI[i];
-            cellOpNumO[id(op.cellPos)]++;
+            if(!op.removed)
+                cellOpNumO[id(op.cellPos)]++;
         }
     }
 

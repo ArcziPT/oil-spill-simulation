@@ -23,11 +23,16 @@ void DispersionComponent::update(sycl::queue& queue, CellGrid& cells,
         auto opParamsI = opParamsBuf.get_access<sycl::access::mode::read>();
 
         for(int i=0; i<opParamsBuf.get_count(); i++){
-            dIO[cells.id(opParamsI[i].cellPos)] += opParamsI[i].density * opParamsI[i].massOfEmulsion;
-            meIO[cells.id(opParamsI[i].cellPos)] += opParamsI[i].massOfEmulsion;
+            if(!opParamsI[i].removed){
+                dIO[cells.id(opParamsI[i].cellPos)] += opParamsI[i].density * opParamsI[i].massOfEmulsion;
+                meIO[cells.id(opParamsI[i].cellPos)] += opParamsI[i].massOfEmulsion;
+            }
         }
         for(int i=0; i<cellParamsBuf.get_count(); i++){
-            cellVolO[i] = (meIO[i]*meIO[i])/dIO[i];
+            if(dIO[i] != 0)
+                cellVolO[i] = (meIO[i]*meIO[i])/dIO[i];
+            else
+                cellVolO[i] = 0;
         }
     }
 

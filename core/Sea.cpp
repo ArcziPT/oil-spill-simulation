@@ -107,12 +107,14 @@ void Sea::update()
         for(auto& subject : subjects){
             switch (subject) {
                 case UpdateSubject::OIL:
+                    std::cout<<"Update OP\n";
                     opBufferPtr.reset(nullptr);
                     componentBufferPtr.reset(nullptr);
                     break;
                 case UpdateSubject::WIND:
                 case UpdateSubject::TEMP:
                 case UpdateSubject::CURRENT:
+                    std::cout<<"Update Params\n";
                     cellBufferPtr.reset(nullptr);
                     break;
             }
@@ -148,23 +150,8 @@ void Sea::update()
 
     for (auto& system : systems)
     {
-        opBufferPtr.reset(nullptr);
-        auto oil = cells.getOil();
-        createOpBuffer();
         system->update(*queuePtr, *cellBufferPtr, *opBufferPtr, *componentBufferPtr, timestep);
         queuePtr->wait();
-        opBufferPtr.reset(nullptr);
-        int c = 0;
-        auto oil2 = cells.getOil();
-        for(int i=0; i<oil.size(); i++){
-            for(int j=0; j<oil[0].size(); j++){
-                if(std::abs(oil[i][j] - oil2[i][j]) > 1){
-                    c++;
-                }
-            }
-        }
-        std::cout<<"c="<<c<<" ";
-        createOpBuffer();
     }
     timeCounter.update(timestep);
     //statistics.update(timeCounter, cells);
