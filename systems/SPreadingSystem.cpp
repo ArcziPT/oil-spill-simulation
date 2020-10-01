@@ -23,57 +23,11 @@ void SpreadingSystem::update(sycl::queue &queue,
                              sycl::buffer<OilPoint::Params, 1> &opParamsBuf,
                              sycl::buffer<OilComponent, 2> &opCompBuf,
                              int timestep) {
-    //mass of emulsion in every cell
-    //sycl::buffer<double, 1> massOfEmulsionBuf(sycl::range<1>(cellParamsBuf.get_count()));
     std::vector<double> massOfEmulsion(cellParamsBuf.get_count(), 0);
-    //oil density for every cell
-    //sycl::buffer<double, 1> oilDensityBuf(sycl::range<1>(cellParamsBuf.get_count()));
     std::vector<double> oilDensity(cellParamsBuf.get_count(), 0);
-    //volume of emulsion in every cell
-    //sycl::buffer<double, 1> volumeBuf(sycl::range<1>(cellParamsBuf.get_count()));
     std::vector<double> volume(cellParamsBuf.get_count(), 0);
-    //random ratio for every oil point used later
-    sycl::buffer<double, 1> randomRatioBuf(sycl::range<1>(opParamsBuf.get_count()));
+    std::vector<double> randomRatio(opParamsBuf.get_count(), 0);
     double tvolume = 0;
-
-    //Calculate massOfEmulsion, oilDensity and init randomRatio, because porting to GPU code is not that simple
-    {
-        //auto massOfEmulsionIO = massOfEmulsionBuf.get_access<sycl::access::mode::read_write>();
-        //auto oilDensityIO = oilDensityBuf.get_access<sycl::access::mode::read_write>();
-        //auto volumeIO = volumeBuf.get_access<sycl::access::mode::read_write>();
-        auto randomRatioO = randomRatioBuf.get_access<sycl::access::mode::write>();
-        auto opParamsI = opParamsBuf.get_access<sycl::access::mode::read>();
-        auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>();
-
-        std::random_device rd;
-        std::mt19937 mt(rd());
-        std::uniform_real_distribution<double> dist(0, 1);
-
-        for (int i = 0; i < opParamsBuf.get_count(); i++) {
-            if(!opParamsI[i].removed){
-                massOfEmulsion[cells.id(opParamsI[i].cellPos)] += opParamsI[i].massOfEmulsion;
-                oilDensity[cells.id(opParamsI[i].cellPos)] += opParamsI[i].density * opParamsI[i].massOfEmulsion;
-            }
-            randomRatioO[i] = dist(mt);
-        }
-
-        auto cols = config.cols;
-        auto rows = config.rows;
-        for (int i = 0; i < cellParamsBuf.get_count(); i++) {
-            if(oilDensity[i] != 0 && massOfEmulsion[i] != 0 && cellParamsI[i].row != 0 && cellParamsI[i].row != rows-1 && cellParamsI[i].col != cols-1 && cellParamsI[i].col != 0) {
-                oilDensity[i] = oilDensity[i] / massOfEmulsion[i];
-                volume[i] = massOfEmulsion[i] / oilDensity[i];
-                tvolume += volume[i];
-            }else{
-                oilDensity[i] = 0;
-                volume[i] = 0;
-            }
-        }
-    }
-
-    sycl::buffer<double, 1> massOfEmulsionBuf(massOfEmulsion.data(), sycl::range<1>(cellParamsBuf.get_count()));
-    sycl::buffer<double, 1> oilDensityBuf(oilDensity.data(), sycl::range<1>(cellParamsBuf.get_count()));
-    sycl::buffer<double, 1> volumeBuf(volume.data(), sycl::range<1>(cellParamsBuf.get_count()));
 
     //temporary
     sycl::buffer<data, 1> dataBuf(sycl::range<1>(cellParamsBuf.get_count()));
@@ -123,7 +77,7 @@ void SpreadingSystem::update(sycl::queue &queue,
         return rhos;
     };
 
-    double time = (double) timestep / 2;
+    double time = timeSystem.totalTime + (double) timestep / 2;
     /*
      * TODO: refactor
      * For every direction (right and down) submit two jobs:
@@ -133,6 +87,41 @@ void SpreadingSystem::update(sycl::queue &queue,
      *  - wait to finish
      */
 
+    //prepare data
+    {
+        auto opParamsI = opParamsBuf.get_access<sycl::access::mode::read>();
+        auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>();
+
+        std::random_device rd;
+        std::mt19937 mt(rd());
+        std::uniform_real_distribution<double> dist(0, 1);
+
+        for (int i = 0; i < opParamsBuf.get_count(); i++) {
+            if(!opParamsI[i].removed){
+                massOfEmulsion[cells.id(opParamsI[i].cellPos)] += opParamsI[i].massOfEmulsion;
+                oilDensity[cells.id(opParamsI[i].cellPos)] += opParamsI[i].density * opParamsI[i].massOfEmulsion;
+            }
+            randomRatio[i] = dist(mt);
+        }
+
+        auto cols = config.cols;
+        auto rows = config.rows;
+        for (int i = 0; i < cellParamsBuf.get_count(); i++) {
+            if(oilDensity[i] != 0 && massOfEmulsion[i] != 0 && cellParamsI[i].row != 0 && cellParamsI[i].row != rows-1 && cellParamsI[i].col != cols-1 && cellParamsI[i].col != 0) {
+                oilDensity[i] = oilDensity[i] / massOfEmulsion[i];
+                volume[i] = massOfEmulsion[i] / oilDensity[i];
+                tvolume += volume[i];
+            }else{
+                oilDensity[i] = 0;
+                volume[i] = 0;
+            }
+        }
+    }
+    std::unique_ptr<sycl::buffer<double, 1>> massOfEmulsionBuf(new sycl::buffer<double, 1>(massOfEmulsion.data(), sycl::range<1>(cellParamsBuf.get_count())));
+    std::unique_ptr<sycl::buffer<double, 1>> oilDensityBuf(new sycl::buffer<double, 1>(oilDensity.data(), sycl::range<1>(cellParamsBuf.get_count())));
+    std::unique_ptr<sycl::buffer<double, 1>> volumeBuf(new sycl::buffer<double, 1>(volume.data(), sycl::range<1>(cellParamsBuf.get_count())));
+    std::unique_ptr<sycl::buffer<double, 1>> randomRatioBuf(new sycl::buffer<double, 1>(randomRatio.data(), sycl::range<1>(opParamsBuf.get_count())));
+
     /**
      * dx=0
      * dy=1
@@ -140,8 +129,8 @@ void SpreadingSystem::update(sycl::queue &queue,
      */
     queue.submit([&](sycl::handler &cgh) {
         auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>(cgh);
-        auto oilDensityI = oilDensityBuf.get_access<sycl::access::mode::read>(cgh);
-        auto massOfEmulsionI = massOfEmulsionBuf.get_access<sycl::access::mode::read>(cgh);
+        auto oilDensityI = oilDensityBuf->get_access<sycl::access::mode::read>(cgh);
+        auto massOfEmulsionI = massOfEmulsionBuf->get_access<sycl::access::mode::read>(cgh);
         auto dataO = dataBuf.get_access<sycl::access::mode::write>(cgh);
 
         auto equals = [](const TypeInfo &t1, const TypeInfo &t2) -> bool {
@@ -179,6 +168,16 @@ void SpreadingSystem::update(sycl::queue &queue,
                 return;
             }
 
+            /*double temperature = (cell1.getTemperature() + cell2.getTemperature()) / 2;
+            double salinity = config.getSalinity();
+            double waterDensity = TemperatureDependency.calculateWaterDensity(temperature, salinity);
+            double kinematicWaterViscosity = TemperatureDependency.calculateWaterDynamicViscosity(temperature, salinity)/ waterDensity;
+            double time = timesystem.getTotalTime() + timestep / 2.;
+            double delta = (waterDensity - oilDensity) / waterDensity;
+            double base = (g * delta * volume * volume) / (Math.sqrt(kinematicWaterViscosity));
+            double diffusion = 0.49/ Math.pow(config.getSpreadigCoefficient(),2 ) * Math.pow(base, 1.0 / 3) * 1 / Math.sqrt(time);
+            double deltaMass = (0.5 * (mass2 - mass1) * (1 - Math.exp(-2* diffusion / (size * size) * timestep)));*/
+
             double oilDensity = (mass1 * oilDensityI[i] + mass2 * oilDensityI[n_i]) / (mass1 + mass2);
             double temperature = (cell.temperature + cell2.temperature) / 2;
             double waterDensity = calculateWaterDensity(temperature, salinity);
@@ -208,31 +207,17 @@ void SpreadingSystem::update(sycl::queue &queue,
             dataO[n_i] = dataO[i] = data(ti, fi, ratio, deltaMass);
         });
     });
-
-    /*{
-        auto dataI = dataBuf.get_access<sycl::access::mode::read>();
-        auto cellPramsI = cellParamsBuf.get_access<sycl::access::mode::read>();
-
-        for(int i=0; i<150; i++){
-            for(int j=i*150; j<(i+1)*150; j++){
-                std::cout<<dataI[j].valid<<" ";
-            }
-            std::cout<<std::endl;
-        }
-    }*/
-
-
     /**
      * Update OP
      */
     queue.submit([&](sycl::handler &cgh) {
         auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>(cgh);
         auto opParamsIO = opParamsBuf.get_access<sycl::access::mode::read_write>(cgh);
-        auto oilDensityI = oilDensityBuf.get_access<sycl::access::mode::read>(cgh);
-        auto massOfEmulsionI = massOfEmulsionBuf.get_access<sycl::access::mode::read>(cgh);
+        auto oilDensityI = oilDensityBuf->get_access<sycl::access::mode::read>(cgh);
+        auto massOfEmulsionI = massOfEmulsionBuf->get_access<sycl::access::mode::read>(cgh);
         auto dataI = dataBuf.get_access<sycl::access::mode::read>(cgh);
-        auto volumeI = volumeBuf.get_access<sycl::access::mode::read>(cgh);
-        auto randomRatioI = randomRatioBuf.get_access<sycl::access::mode::read>(cgh);
+        auto volumeI = volumeBuf->get_access<sycl::access::mode::read>(cgh);
+        auto randomRatioI = randomRatioBuf->get_access<sycl::access::mode::read>(cgh);
 
         int cols = cells.getCol();
         int rows = cells.getRow();
@@ -270,8 +255,10 @@ void SpreadingSystem::update(sycl::queue &queue,
             auto thickness = volumeI[data.fi] / (cellSize * cellSize);
             auto deltaMass = data.deltaMass;
             if (thickness > minSlickThickness){
+
                 if (data.ratio > randomRatioI[i]) {
                     Vector2 v(0, 0);
+                    ;
                     if (deltaMass > 0)
                         v.y = -cellSize;
                     else
@@ -283,18 +270,50 @@ void SpreadingSystem::update(sycl::queue &queue,
             }
         });
     });
+    queue.wait(); //!important synchronize data;
+    //destory data
+    oilDensityBuf->set_final_data(nullptr);
+    massOfEmulsionBuf->set_final_data(nullptr);
+    volumeBuf->set_final_data(nullptr);
+    randomRatioBuf->set_final_data(nullptr);
+    massOfEmulsion = std::vector<double>(cellParamsBuf.get_count(), 0);
+    oilDensity = std::vector<double>(cellParamsBuf.get_count(), 0);
+    volume = std::vector<double>(cellParamsBuf.get_count(), 0);
+    randomRatio = std::vector<double>(opParamsBuf.get_count(), 0);
 
-    /*{
+    //prepare data
+    {
         auto opParamsI = opParamsBuf.get_access<sycl::access::mode::read>();
+        auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>();
 
-        int c = 0;
-        for(int i=0; i<opParamsBuf.get_count(); i++){
-            if(opParamsI[i].removed)
-                c++;
+        std::random_device rd;
+        std::mt19937 mt(rd());
+        std::uniform_real_distribution<double> dist(0, 1);
+
+        for (int i = 0; i < opParamsBuf.get_count(); i++) {
+            if(!opParamsI[i].removed){
+                massOfEmulsion[cells.id(opParamsI[i].cellPos)] += opParamsI[i].massOfEmulsion;
+                oilDensity[cells.id(opParamsI[i].cellPos)] += opParamsI[i].density * opParamsI[i].massOfEmulsion;
+            }
+            randomRatio[i] = dist(mt);
         }
 
-        std::cout<<"c="<<c<<std::endl;
-    }*/
+        auto cols = config.cols;
+        auto rows = config.rows;
+        for (int i = 0; i < cellParamsBuf.get_count(); i++) {
+            if(oilDensity[i] != 0 && massOfEmulsion[i] != 0 && cellParamsI[i].row != 0 && cellParamsI[i].row != rows-1 && cellParamsI[i].col != cols-1 && cellParamsI[i].col != 0) {
+                oilDensity[i] = oilDensity[i] / massOfEmulsion[i];
+                volume[i] = massOfEmulsion[i] / oilDensity[i];
+            }else{
+                oilDensity[i] = 0;
+                volume[i] = 0;
+            }
+        }
+    }
+    massOfEmulsionBuf = std::unique_ptr<sycl::buffer<double, 1>>(new sycl::buffer<double, 1>(massOfEmulsion.data(), sycl::range<1>(cellParamsBuf.get_count())));
+    oilDensityBuf = std::unique_ptr<sycl::buffer<double, 1>>(new sycl::buffer<double, 1>(oilDensity.data(), sycl::range<1>(cellParamsBuf.get_count())));
+    volumeBuf = std::unique_ptr<sycl::buffer<double, 1>>(new sycl::buffer<double, 1>(volume.data(), sycl::range<1>(cellParamsBuf.get_count())));
+    randomRatioBuf = std::unique_ptr<sycl::buffer<double, 1>>(new sycl::buffer<double, 1>(randomRatio.data(), sycl::range<1>(opParamsBuf.get_count())));
 
     /**
     * dx=0
@@ -303,8 +322,8 @@ void SpreadingSystem::update(sycl::queue &queue,
     */
     queue.submit([&](sycl::handler &cgh) {
         auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>(cgh);
-        auto oilDensityI = oilDensityBuf.get_access<sycl::access::mode::read>(cgh);
-        auto massOfEmulsionI = massOfEmulsionBuf.get_access<sycl::access::mode::read>(cgh);
+        auto oilDensityI = oilDensityBuf->get_access<sycl::access::mode::read>(cgh);
+        auto massOfEmulsionI = massOfEmulsionBuf->get_access<sycl::access::mode::read>(cgh);
         auto dataO = dataBuf.get_access<sycl::access::mode::write>(cgh);
 
         auto equals = [](const TypeInfo &t1, const TypeInfo &t2) -> bool {
@@ -371,18 +390,17 @@ void SpreadingSystem::update(sycl::queue &queue,
             dataO[n_i] = dataO[i] = data(ti, fi, ratio, deltaMass);
         });
     });
-
     /**
      * Update OP
      */
     queue.submit([&](sycl::handler &cgh) {
         auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>(cgh);
         auto opParamsIO = opParamsBuf.get_access<sycl::access::mode::read_write>(cgh);
-        auto oilDensityI = oilDensityBuf.get_access<sycl::access::mode::read>(cgh);
-        auto massOfEmulsionI = massOfEmulsionBuf.get_access<sycl::access::mode::read>(cgh);
+        auto oilDensityI = oilDensityBuf->get_access<sycl::access::mode::read>(cgh);
+        auto massOfEmulsionI = massOfEmulsionBuf->get_access<sycl::access::mode::read>(cgh);
         auto dataI = dataBuf.get_access<sycl::access::mode::read>(cgh);
-        auto volumeI = volumeBuf.get_access<sycl::access::mode::read>(cgh);
-        auto randomRatioI = randomRatioBuf.get_access<sycl::access::mode::read>(cgh);
+        auto volumeI = volumeBuf->get_access<sycl::access::mode::read>(cgh);
+        auto randomRatioI = randomRatioBuf->get_access<sycl::access::mode::read>(cgh);
 
         int cols = cells.getCol();
         int rows = cells.getRow();
@@ -422,6 +440,7 @@ void SpreadingSystem::update(sycl::queue &queue,
             if (thickness > minSlickThickness){
                 if (data.ratio > randomRatioI[i]) {
                     Vector2 v(0, 0);
+                    ;
                     if (deltaMass > 0)
                         v.y = -cellSize;
                     else
@@ -433,6 +452,50 @@ void SpreadingSystem::update(sycl::queue &queue,
             }
         });
     });
+    queue.wait(); //!important synchronize data;
+    //destory data
+    oilDensityBuf->set_final_data(nullptr);
+    massOfEmulsionBuf->set_final_data(nullptr);
+    volumeBuf->set_final_data(nullptr);
+    randomRatioBuf->set_final_data(nullptr);
+    massOfEmulsion = std::vector<double>(cellParamsBuf.get_count(), 0);
+    oilDensity = std::vector<double>(cellParamsBuf.get_count(), 0);
+    volume = std::vector<double>(cellParamsBuf.get_count(), 0);
+    randomRatio = std::vector<double>(opParamsBuf.get_count(), 0);
+
+    //prepare data
+    {
+        auto opParamsI = opParamsBuf.get_access<sycl::access::mode::read>();
+        auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>();
+
+        std::random_device rd;
+        std::mt19937 mt(rd());
+        std::uniform_real_distribution<double> dist(0, 1);
+
+        for (int i = 0; i < opParamsBuf.get_count(); i++) {
+            if(!opParamsI[i].removed){
+                massOfEmulsion[cells.id(opParamsI[i].cellPos)] += opParamsI[i].massOfEmulsion;
+                oilDensity[cells.id(opParamsI[i].cellPos)] += opParamsI[i].density * opParamsI[i].massOfEmulsion;
+            }
+            randomRatio[i] = dist(mt);
+        }
+
+        auto cols = config.cols;
+        auto rows = config.rows;
+        for (int i = 0; i < cellParamsBuf.get_count(); i++) {
+            if(oilDensity[i] != 0 && massOfEmulsion[i] != 0 && cellParamsI[i].row != 0 && cellParamsI[i].row != rows-1 && cellParamsI[i].col != cols-1 && cellParamsI[i].col != 0) {
+                oilDensity[i] = oilDensity[i] / massOfEmulsion[i];
+                volume[i] = massOfEmulsion[i] / oilDensity[i];\
+            }else{
+                oilDensity[i] = 0;
+                volume[i] = 0;
+            }
+        }
+    }
+    massOfEmulsionBuf = std::unique_ptr<sycl::buffer<double, 1>>(new sycl::buffer<double, 1>(massOfEmulsion.data(), sycl::range<1>(cellParamsBuf.get_count())));
+    oilDensityBuf = std::unique_ptr<sycl::buffer<double, 1>>(new sycl::buffer<double, 1>(oilDensity.data(), sycl::range<1>(cellParamsBuf.get_count())));
+    volumeBuf = std::unique_ptr<sycl::buffer<double, 1>>(new sycl::buffer<double, 1>(volume.data(), sycl::range<1>(cellParamsBuf.get_count())));
+    randomRatioBuf = std::unique_ptr<sycl::buffer<double, 1>>(new sycl::buffer<double, 1>(randomRatio.data(), sycl::range<1>(opParamsBuf.get_count())));
 
     /**
     * dx=0
@@ -441,8 +504,8 @@ void SpreadingSystem::update(sycl::queue &queue,
     */
     queue.submit([&](sycl::handler &cgh) {
         auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>(cgh);
-        auto oilDensityI = oilDensityBuf.get_access<sycl::access::mode::read>(cgh);
-        auto massOfEmulsionI = massOfEmulsionBuf.get_access<sycl::access::mode::read>(cgh);
+        auto oilDensityI = oilDensityBuf->get_access<sycl::access::mode::read>(cgh);
+        auto massOfEmulsionI = massOfEmulsionBuf->get_access<sycl::access::mode::read>(cgh);
         auto dataO = dataBuf.get_access<sycl::access::mode::write>(cgh);
 
         auto equals = [](const TypeInfo &t1, const TypeInfo &t2) -> bool {
@@ -516,11 +579,11 @@ void SpreadingSystem::update(sycl::queue &queue,
     queue.submit([&](sycl::handler &cgh) {
         auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>(cgh);
         auto opParamsIO = opParamsBuf.get_access<sycl::access::mode::read_write>(cgh);
-        auto oilDensityI = oilDensityBuf.get_access<sycl::access::mode::read>(cgh);
-        auto massOfEmulsionI = massOfEmulsionBuf.get_access<sycl::access::mode::read>(cgh);
+        auto oilDensityI = oilDensityBuf->get_access<sycl::access::mode::read>(cgh);
+        auto massOfEmulsionI = massOfEmulsionBuf->get_access<sycl::access::mode::read>(cgh);
         auto dataI = dataBuf.get_access<sycl::access::mode::read>(cgh);
-        auto volumeI = volumeBuf.get_access<sycl::access::mode::read>(cgh);
-        auto randomRatioI = randomRatioBuf.get_access<sycl::access::mode::read>(cgh);
+        auto volumeI = volumeBuf->get_access<sycl::access::mode::read>(cgh);
+        auto randomRatioI = randomRatioBuf->get_access<sycl::access::mode::read>(cgh);
 
         int cols = cells.getCol();
         int rows = cells.getRow();
@@ -558,8 +621,10 @@ void SpreadingSystem::update(sycl::queue &queue,
             auto thickness = volumeI[data.fi] / (cellSize * cellSize);
             auto deltaMass = data.deltaMass;
             if (thickness > minSlickThickness){
+
                 if (data.ratio > randomRatioI[i]) {
                     Vector2 v(0, 0);
+                    ;
                     if (deltaMass > 0)
                         v.x = -cellSize;
                     else
@@ -571,6 +636,50 @@ void SpreadingSystem::update(sycl::queue &queue,
             }
         });
     });
+    queue.wait(); //!important synchronize data;
+    //destroy data
+    oilDensityBuf->set_final_data(nullptr);
+    massOfEmulsionBuf->set_final_data(nullptr);
+    volumeBuf->set_final_data(nullptr);
+    randomRatioBuf->set_final_data(nullptr);
+    massOfEmulsion = std::vector<double>(cellParamsBuf.get_count(), 0);
+    oilDensity = std::vector<double>(cellParamsBuf.get_count(), 0);
+    volume = std::vector<double>(cellParamsBuf.get_count(), 0);
+    randomRatio = std::vector<double>(opParamsBuf.get_count(), 0);
+
+    //prepare data
+    {
+        auto opParamsI = opParamsBuf.get_access<sycl::access::mode::read>();
+        auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>();
+
+        std::random_device rd;
+        std::mt19937 mt(rd());
+        std::uniform_real_distribution<double> dist(0, 1);
+
+        for (int i = 0; i < opParamsBuf.get_count(); i++) {
+            if(!opParamsI[i].removed){
+                massOfEmulsion[cells.id(opParamsI[i].cellPos)] += opParamsI[i].massOfEmulsion;
+                oilDensity[cells.id(opParamsI[i].cellPos)] += opParamsI[i].density * opParamsI[i].massOfEmulsion;
+            }
+            randomRatio[i] = dist(mt);
+        }
+
+        auto cols = config.cols;
+        auto rows = config.rows;
+        for (int i = 0; i < cellParamsBuf.get_count(); i++) {
+            if(oilDensity[i] != 0 && massOfEmulsion[i] != 0 && cellParamsI[i].row != 0 && cellParamsI[i].row != rows-1 && cellParamsI[i].col != cols-1 && cellParamsI[i].col != 0) {
+                oilDensity[i] = oilDensity[i] / massOfEmulsion[i];
+                volume[i] = massOfEmulsion[i] / oilDensity[i];\
+            }else{
+                oilDensity[i] = 0;
+                volume[i] = 0;
+            }
+        }
+    }
+    massOfEmulsionBuf = std::unique_ptr<sycl::buffer<double, 1>>(new sycl::buffer<double, 1>(massOfEmulsion.data(), sycl::range<1>(cellParamsBuf.get_count())));
+    oilDensityBuf = std::unique_ptr<sycl::buffer<double, 1>>(new sycl::buffer<double, 1>(oilDensity.data(), sycl::range<1>(cellParamsBuf.get_count())));
+    volumeBuf = std::unique_ptr<sycl::buffer<double, 1>>(new sycl::buffer<double, 1>(volume.data(), sycl::range<1>(cellParamsBuf.get_count())));
+    randomRatioBuf = std::unique_ptr<sycl::buffer<double, 1>>(new sycl::buffer<double, 1>(randomRatio.data(), sycl::range<1>(opParamsBuf.get_count())));
 
     /**
     * dx=0
@@ -579,8 +688,8 @@ void SpreadingSystem::update(sycl::queue &queue,
     */
     queue.submit([&](sycl::handler &cgh) {
         auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>(cgh);
-        auto oilDensityI = oilDensityBuf.get_access<sycl::access::mode::read>(cgh);
-        auto massOfEmulsionI = massOfEmulsionBuf.get_access<sycl::access::mode::read>(cgh);
+        auto oilDensityI = oilDensityBuf->get_access<sycl::access::mode::read>(cgh);
+        auto massOfEmulsionI = massOfEmulsionBuf->get_access<sycl::access::mode::read>(cgh);
         auto dataO = dataBuf.get_access<sycl::access::mode::write>(cgh);
 
         auto equals = [](const TypeInfo &t1, const TypeInfo &t2) -> bool {
@@ -654,11 +763,11 @@ void SpreadingSystem::update(sycl::queue &queue,
     queue.submit([&](sycl::handler &cgh) {
         auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>(cgh);
         auto opParamsIO = opParamsBuf.get_access<sycl::access::mode::read_write>(cgh);
-        auto oilDensityI = oilDensityBuf.get_access<sycl::access::mode::read>(cgh);
-        auto massOfEmulsionI = massOfEmulsionBuf.get_access<sycl::access::mode::read>(cgh);
+        auto oilDensityI = oilDensityBuf->get_access<sycl::access::mode::read>(cgh);
+        auto massOfEmulsionI = massOfEmulsionBuf->get_access<sycl::access::mode::read>(cgh);
         auto dataI = dataBuf.get_access<sycl::access::mode::read>(cgh);
-        auto volumeI = volumeBuf.get_access<sycl::access::mode::read>(cgh);
-        auto randomRatioI = randomRatioBuf.get_access<sycl::access::mode::read>(cgh);
+        auto volumeI = volumeBuf->get_access<sycl::access::mode::read>(cgh);
+        auto randomRatioI = randomRatioBuf->get_access<sycl::access::mode::read>(cgh);
 
         int cols = cells.getCol();
         int rows = cells.getRow();
@@ -696,8 +805,10 @@ void SpreadingSystem::update(sycl::queue &queue,
             auto thickness = volumeI[data.fi] / (cellSize * cellSize);
             auto deltaMass = data.deltaMass;
             if (thickness > minSlickThickness){
+
                 if (data.ratio > randomRatioI[i]) {
                     Vector2 v(0, 0);
+                    ;
                     if (deltaMass > 0)
                         v.x = -cellSize;
                     else
@@ -709,4 +820,10 @@ void SpreadingSystem::update(sycl::queue &queue,
             }
         });
     });
+    queue.wait(); //!important synchronize data;
+    //destroy data
+    oilDensityBuf->set_final_data(nullptr);
+    massOfEmulsionBuf->set_final_data(nullptr);
+    volumeBuf->set_final_data(nullptr);
+    randomRatioBuf->set_final_data(nullptr);
 }
