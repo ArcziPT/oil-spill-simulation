@@ -36,8 +36,8 @@ void ReEntairedSystem::update(sycl::queue &queue,
         int row = cells.getRow();
         int col = cells.getCol();
 
-        /**
-         * Function returning index of the next cell (up, down, left, right)
+        /*
+         * Function returning index of the next cell
          */
         auto id_up = [col](int i) -> int {
             return i - col;
@@ -84,7 +84,7 @@ void ReEntairedSystem::update(sycl::queue &queue,
 
         std::random_device rd2;
         std::mt19937 mt2(rd2());
-        std::uniform_real_distribution<double> dist2(0, std::numeric_limits<double>::max());
+        std::uniform_real_distribution<double> dist2(0, 1);
 
         auto randomChoiceO = randomChoiceBuf.get_access<sycl::access::mode::write>();
         auto randomRatioO = randomRatioBuf.get_access<sycl::access::mode::write>();

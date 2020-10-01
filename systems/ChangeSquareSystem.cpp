@@ -33,16 +33,17 @@ void ChangeSquareSystem::update(sycl::queue& queue,
             int row = op.cellPos.x;
             int col = op.cellPos.y;
 
-            int newRow = (int) (posY / cellSize);
-            int newCol = (int) (posX / cellSize);
+            int newCol = (int) (posY / cellSize);
+            int newRow = (int) (posX / cellSize);
 
-            auto c1 = (newRow != row || newCol != col);
-            auto c2 = (newRow < rowNum && newRow > 0 && newCol < colNum && newCol > 0);
-
-            op.cellPos.x = c1*c2*newRow + (!c1)*op.cellPos.x;
-            op.cellPos.y = c1*c2*newCol + (!c1)*op.cellPos.y;
-
-            op.removed = (c1 & !c2);
+            if(newRow != row || newCol != col){
+                if(newRow < rowNum-1 && newRow > 0 && newCol < colNum-1 && newCol > 0){
+                    op.cellPos.x = newRow;
+                    op.cellPos.y = newCol;
+                }else{
+                    op.removed = true;
+                }
+            }
         });
     });
 }

@@ -6,11 +6,14 @@
 #include "SPreadingSystem.h"
 
 struct data {
-    int ti;
-    int fi;
-    double ratio;
-    double deltaMass;
+    int ti = 0;
+    int fi = 0;
+    double ratio = 0;
+    double deltaMass = 0;
 
+    bool valid = true;
+
+    data(bool valid): valid(valid) {}
     data(int ti, int fi, double ratio, double deltaMass) : ti(ti), fi(fi), ratio(ratio), deltaMass(deltaMass) {}
 };
 
@@ -21,38 +24,56 @@ void SpreadingSystem::update(sycl::queue &queue,
                              sycl::buffer<OilComponent, 2> &opCompBuf,
                              int timestep) {
     //mass of emulsion in every cell
-    sycl::buffer<double, 1> massOfEmulsionBuf(sycl::range<1>(cellParamsBuf.get_count()));
+    //sycl::buffer<double, 1> massOfEmulsionBuf(sycl::range<1>(cellParamsBuf.get_count()));
+    std::vector<double> massOfEmulsion(cellParamsBuf.get_count(), 0);
     //oil density for every cell
-    sycl::buffer<double, 1> oilDensityBuf(sycl::range<1>(cellParamsBuf.get_count()));
+    //sycl::buffer<double, 1> oilDensityBuf(sycl::range<1>(cellParamsBuf.get_count()));
+    std::vector<double> oilDensity(cellParamsBuf.get_count(), 0);
     //volume of emulsion in every cell
-    sycl::buffer<double, 1> volumeBuf(sycl::range<1>(cellParamsBuf.get_count()));
+    //sycl::buffer<double, 1> volumeBuf(sycl::range<1>(cellParamsBuf.get_count()));
+    std::vector<double> volume(cellParamsBuf.get_count(), 0);
     //random ratio for every oil point used later
     sycl::buffer<double, 1> randomRatioBuf(sycl::range<1>(opParamsBuf.get_count()));
-    double volume = 0;
+    double tvolume = 0;
 
     //Calculate massOfEmulsion, oilDensity and init randomRatio, because porting to GPU code is not that simple
     {
-        auto massOfEmulsionO = massOfEmulsionBuf.get_access<sycl::access::mode::write>();
-        auto oilDensityO = oilDensityBuf.get_access<sycl::access::mode::write>();
-        auto volumeO = volumeBuf.get_access<sycl::access::mode::write>();
+        //auto massOfEmulsionIO = massOfEmulsionBuf.get_access<sycl::access::mode::read_write>();
+        //auto oilDensityIO = oilDensityBuf.get_access<sycl::access::mode::read_write>();
+        //auto volumeIO = volumeBuf.get_access<sycl::access::mode::read_write>();
         auto randomRatioO = randomRatioBuf.get_access<sycl::access::mode::write>();
         auto opParamsI = opParamsBuf.get_access<sycl::access::mode::read>();
+        auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>();
 
         std::random_device rd;
         std::mt19937 mt(rd());
-        std::uniform_real_distribution<double> dist(1.0, std::numeric_limits<double>::max());
+        std::uniform_real_distribution<double> dist(0, 1);
 
         for (int i = 0; i < opParamsBuf.get_count(); i++) {
-            massOfEmulsionO[cells.id(opParamsI[i].cellPos)] += opParamsI[i].massOfEmulsion;
-            oilDensityO[cells.id(opParamsI[i].cellPos)] += opParamsI[i].density * opParamsI[i].massOfEmulsion;
+            if(!opParamsI[i].removed){
+                massOfEmulsion[cells.id(opParamsI[i].cellPos)] += opParamsI[i].massOfEmulsion;
+                oilDensity[cells.id(opParamsI[i].cellPos)] += opParamsI[i].density * opParamsI[i].massOfEmulsion;
+            }
             randomRatioO[i] = dist(mt);
         }
+
+        auto cols = config.cols;
+        auto rows = config.rows;
         for (int i = 0; i < cellParamsBuf.get_count(); i++) {
-            oilDensityO[i] = oilDensityO[i] / massOfEmulsionO[i];
-            volumeO[i] = massOfEmulsionO[i] / oilDensityO[i];
-            volume += volumeO[i];
+            if(oilDensity[i] != 0 && massOfEmulsion[i] != 0 && cellParamsI[i].row != 0 && cellParamsI[i].row != rows-1 && cellParamsI[i].col != cols-1 && cellParamsI[i].col != 0) {
+                oilDensity[i] = oilDensity[i] / massOfEmulsion[i];
+                volume[i] = massOfEmulsion[i] / oilDensity[i];
+                tvolume += volume[i];
+            }else{
+                oilDensity[i] = 0;
+                volume[i] = 0;
+            }
         }
     }
+
+    sycl::buffer<double, 1> massOfEmulsionBuf(massOfEmulsion.data(), sycl::range<1>(cellParamsBuf.get_count()));
+    sycl::buffer<double, 1> oilDensityBuf(oilDensity.data(), sycl::range<1>(cellParamsBuf.get_count()));
+    sycl::buffer<double, 1> volumeBuf(volume.data(), sycl::range<1>(cellParamsBuf.get_count()));
 
     //temporary
     sycl::buffer<data, 1> dataBuf(sycl::range<1>(cellParamsBuf.get_count()));
@@ -102,7 +123,7 @@ void SpreadingSystem::update(sycl::queue &queue,
         return rhos;
     };
 
-    double time = timeSystem.totalTime + timestep / 2;
+    double time = (double) timestep / 2;
     /*
      * TODO: refactor
      * For every direction (right and down) submit two jobs:
@@ -113,8 +134,8 @@ void SpreadingSystem::update(sycl::queue &queue,
      */
 
     /**
-     * dx=1
-     * dy=0
+     * dx=0
+     * dy=1
      * s=0
      */
     queue.submit([&](sycl::handler &cgh) {
@@ -136,47 +157,71 @@ void SpreadingSystem::update(sycl::queue &queue,
         double cellSize = config.cellSize;
         double spreadingCoefficient = config.spreadingCoefficient;
 
-        cgh.parallel_for<class SSCalc1>(sycl::range<1>(cellParamsBuf.get_count()), [=](sycl::id<1> i) {
+        cgh.parallel_for<class SSCalc4>(sycl::range<1>(cellParamsBuf.get_count()), [=](sycl::id<1> i) {
             auto &cell = cellParamsI[i];
-
-            if (cell.row == rows - 1 || cell.row % 2 != 0)
-                return;
-
             //second cell
-            auto n_i = i[0] + cols;
+            auto n_i = i[0] + 1;
             auto &cell2 = cellParamsI[n_i];
+
+            if (cell.col % 2 == 0 || cell.col >= cols - 2 || cell.col == 0 || cell.row == 0 || cell.row == rows - 1)
+                return;
 
             double mass1 = massOfEmulsionI[i];
             double mass2 = massOfEmulsionI[n_i];
 
-            if (mass1 == 0 || mass2 == 0)
+            if (mass1 == 0 && mass2 == 0) {
+                dataO[n_i] = dataO[i] = data(false);
                 return;
+            }
 
-            if (equals(cell.type, seaType) && equals(cell2.type, seaType))
+            if(!equals(cell.type, seaType) && !equals(cell2.type, seaType)) {
+                dataO[n_i] = dataO[i] = data(false);
                 return;
+            }
 
             double oilDensity = (mass1 * oilDensityI[i] + mass2 * oilDensityI[n_i]) / (mass1 + mass2);
             double temperature = (cell.temperature + cell2.temperature) / 2;
             double waterDensity = calculateWaterDensity(temperature, salinity);
             double kinematicWaterViscosity = calcWaterDynamicViscosity(temperature, salinity) / waterDensity;
             double delta = (waterDensity - oilDensity) / waterDensity;
-            double base = (g * delta * volume * volume) / (sycl::sqrt(kinematicWaterViscosity));
+            double base = (g * delta * tvolume * tvolume) / (sycl::sqrt(kinematicWaterViscosity));
             double diffusion =
                     0.49 / sycl::pow(spreadingCoefficient, 2.0) * sycl::pow(base, 1.0 / 3) * 1 / sycl::sqrt(time);
 
             double deltaMass = (0.5 * (mass2 - mass1) *
                                 (1 - sycl::exp(-2 * diffusion / (cellSize * cellSize) * timestep)));
 
-            if (deltaMass == 0)
+            if (deltaMass == 0) {
+                dataO[n_i] = dataO[i] = data(false);
                 return;
+            }
 
-            double ratio = (deltaMass < 0) * (-deltaMass / mass1) + (deltaMass > 0) * (deltaMass / mass2);
-            int ti = (deltaMass < 0) * (n_i) + (deltaMass > 0) * (i[0]);
-            int fi = (deltaMass < 0) * (i[0]) + (deltaMass > 0) * (n_i);
+            //double ratio = (deltaMass < 0) * (-deltaMass / mass1) + (deltaMass > 0) * (deltaMass / mass2);
+            //int ti = (deltaMass < 0) * (n_i) + (deltaMass > 0) * (i[0]);
+            //int fi = (deltaMass < 0) * (i[0]) + (deltaMass > 0) * (n_i);
+            double ratio = 0;
+            int ti = 0, fi = 0;
+            ratio = (deltaMass < 0) ? (-deltaMass/mass1) : (deltaMass/mass2);
+            ti = (deltaMass < 0) ? n_i : i[0];
+            fi = (deltaMass < 0) ? i[0] : n_i;
 
-            dataO[i] = data(fi, ti, ratio, deltaMass);
+            dataO[n_i] = dataO[i] = data(ti, fi, ratio, deltaMass);
         });
     });
+
+    /*{
+        auto dataI = dataBuf.get_access<sycl::access::mode::read>();
+        auto cellPramsI = cellParamsBuf.get_access<sycl::access::mode::read>();
+
+        for(int i=0; i<150; i++){
+            for(int j=i*150; j<(i+1)*150; j++){
+                std::cout<<dataI[j].valid<<" ";
+            }
+            std::cout<<std::endl;
+        }
+    }*/
+
+
     /**
      * Update OP
      */
@@ -217,24 +262,45 @@ void SpreadingSystem::update(sycl::queue &queue,
                 return;
 
             auto cell_i = id(op.cellPos);
-            auto &cell = cellParamsI[cell_i];
-            if (cell.row == rows - 1 || cell.row % 2 != 0 || equals(cell.type, seaType))
+            auto &data = dataI[cell_i];
+
+            if (!data.valid || data.fi != cell_i || !equals(cellParamsI[data.ti].type, seaType))
                 return;
 
-            auto thickness = volumeI[cell_i] / (cellSize * cellSize);
-            auto deltaMass = dataI[cell_i].deltaMass;
-            if (thickness > minSlickThickness && dataI[cell_i].ratio > randomRatioI[i]) {
-                addVec(op.position, Vector2(0, (deltaMass > 0) * (-cellSize) + (deltaMass < 0) * (cellSize)));
-                op.cellPos = posFromId(dataI[cell_i].ti);
+            auto thickness = volumeI[data.fi] / (cellSize * cellSize);
+            auto deltaMass = data.deltaMass;
+            if (thickness > minSlickThickness){
+                if (data.ratio > randomRatioI[i]) {
+                    Vector2 v(0, 0);
+                    if (deltaMass > 0)
+                        v.y = -cellSize;
+                    else
+                        v.y = cellSize;
+
+                    addVec(op.position, v);
+                    op.cellPos = posFromId(data.ti);
+                }
             }
         });
     });
 
+    /*{
+        auto opParamsI = opParamsBuf.get_access<sycl::access::mode::read>();
+
+        int c = 0;
+        for(int i=0; i<opParamsBuf.get_count(); i++){
+            if(opParamsI[i].removed)
+                c++;
+        }
+
+        std::cout<<"c="<<c<<std::endl;
+    }*/
+
     /**
-     * dx=1
-     * dy=0
-     * s=1
-     */
+    * dx=0
+    * dy=1
+    * s=0
+    */
     queue.submit([&](sycl::handler &cgh) {
         auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>(cgh);
         auto oilDensityI = oilDensityBuf.get_access<sycl::access::mode::read>(cgh);
@@ -256,44 +322,56 @@ void SpreadingSystem::update(sycl::queue &queue,
 
         cgh.parallel_for<class SSCalc2>(sycl::range<1>(cellParamsBuf.get_count()), [=](sycl::id<1> i) {
             auto &cell = cellParamsI[i];
-
-            if (cell.row == rows - 1 || cell.row % 2 != 1)
-                return;
-
-            auto n_i = i[0] + cols;
+            //second cell
+            auto n_i = i[0] + 1;
             auto &cell2 = cellParamsI[n_i];
+
+            if (cell.col % 2 == 1 || cell.col >= cols - 2 || cell.col <= 1 || cell.row == 0 || cell.row == rows - 1)
+                return;
 
             double mass1 = massOfEmulsionI[i];
             double mass2 = massOfEmulsionI[n_i];
 
-            if (mass1 == 0 || mass2 == 0)
+            if (mass1 == 0 && mass2 == 0) {
+                dataO[n_i] = dataO[i] = data(false);
                 return;
+            }
 
-            if (equals(cell.type, seaType) && equals(cell2.type, seaType))
+            if(!equals(cell.type, seaType) && !equals(cell2.type, seaType)) {
+                dataO[n_i] = dataO[i] = data(false);
                 return;
+            }
 
             double oilDensity = (mass1 * oilDensityI[i] + mass2 * oilDensityI[n_i]) / (mass1 + mass2);
             double temperature = (cell.temperature + cell2.temperature) / 2;
             double waterDensity = calculateWaterDensity(temperature, salinity);
             double kinematicWaterViscosity = calcWaterDynamicViscosity(temperature, salinity) / waterDensity;
             double delta = (waterDensity - oilDensity) / waterDensity;
-            double base = (g * delta * volume * volume) / (sycl::sqrt(kinematicWaterViscosity));
+            double base = (g * delta * tvolume * tvolume) / (sycl::sqrt(kinematicWaterViscosity));
             double diffusion =
                     0.49 / sycl::pow(spreadingCoefficient, 2.0) * sycl::pow(base, 1.0 / 3) * 1 / sycl::sqrt(time);
 
             double deltaMass = (0.5 * (mass2 - mass1) *
                                 (1 - sycl::exp(-2 * diffusion / (cellSize * cellSize) * timestep)));
 
-            if (deltaMass == 0)
+            if (deltaMass == 0) {
+                dataO[n_i] = dataO[i] = data(false);
                 return;
+            }
 
-            double ratio = (deltaMass < 0) * (-deltaMass / mass1) + (deltaMass > 0) * (deltaMass / mass2);
-            int ti = (deltaMass < 0) * (n_i) + (deltaMass > 0) * (i[0]);
-            int fi = (deltaMass < 0) * (i[0]) + (deltaMass > 0) * (n_i);
+            //double ratio = (deltaMass < 0) * (-deltaMass / mass1) + (deltaMass > 0) * (deltaMass / mass2);
+            //int ti = (deltaMass < 0) * (n_i) + (deltaMass > 0) * (i[0]);
+            //int fi = (deltaMass < 0) * (i[0]) + (deltaMass > 0) * (n_i);
+            double ratio = 0;
+            int ti = 0, fi = 0;
+            ratio = (deltaMass < 0) ? (-deltaMass/mass1) : (deltaMass/mass2);
+            ti = (deltaMass < 0) ? n_i : i[0];
+            fi = (deltaMass < 0) ? i[0] : n_i;
 
-            dataO[i] = data(fi, ti, ratio, deltaMass);
+            dataO[n_i] = dataO[i] = data(ti, fi, ratio, deltaMass);
         });
     });
+
     /**
      * Update OP
      */
@@ -334,24 +412,33 @@ void SpreadingSystem::update(sycl::queue &queue,
                 return;
 
             auto cell_i = id(op.cellPos);
-            auto &cell = cellParamsI[cell_i];
-            if (cell.row == rows - 1 || cell.row % 2 != 1 || equals(cell.type, seaType))
+            auto &data = dataI[cell_i];
+
+            if (!data.valid || data.fi != cell_i || !equals(cellParamsI[data.ti].type, seaType))
                 return;
 
-            auto thickness = volumeI[cell_i] / (cellSize * cellSize);
-            auto deltaMass = dataI[cell_i].deltaMass;
-            if (thickness > minSlickThickness && dataI[cell_i].ratio > randomRatioI[i]) {
-                addVec(op.position, Vector2(0, (deltaMass > 0) * (-cellSize) + (deltaMass < 0) * (cellSize)));
-                op.cellPos = posFromId(dataI[cell_i].ti);
+            auto thickness = volumeI[data.fi] / (cellSize * cellSize);
+            auto deltaMass = data.deltaMass;
+            if (thickness > minSlickThickness){
+                if (data.ratio > randomRatioI[i]) {
+                    Vector2 v(0, 0);
+                    if (deltaMass > 0)
+                        v.y = -cellSize;
+                    else
+                        v.y = cellSize;
+
+                    addVec(op.position, v);
+                    op.cellPos = posFromId(data.ti);
+                }
             }
         });
     });
 
     /**
-     * dx=0
-     * dy=1
-     * s=0
-     */
+    * dx=0
+    * dy=1
+    * s=0
+    */
     queue.submit([&](sycl::handler &cgh) {
         auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>(cgh);
         auto oilDensityI = oilDensityBuf.get_access<sycl::access::mode::read>(cgh);
@@ -371,46 +458,58 @@ void SpreadingSystem::update(sycl::queue &queue,
         double cellSize = config.cellSize;
         double spreadingCoefficient = config.spreadingCoefficient;
 
-        cgh.parallel_for<class SSCalc3>(sycl::range<1>(cellParamsBuf.get_count()), [=](sycl::id<1> i) {
+        cgh.parallel_for<class SSCalc1>(sycl::range<1>(cellParamsBuf.get_count()), [=](sycl::id<1> i) {
             auto &cell = cellParamsI[i];
-
-            if (cell.col == cols - 1 || cell.col % 2 != 0)
-                return;
-
-            auto n_i = i[0] + 1;
+            //second cell
+            auto n_i = i[0] + cols;
             auto &cell2 = cellParamsI[n_i];
+
+            if (cell.row % 2 == 0 || cell.row >= rows - 2 || cell.row == 0 || cell.col == 0 || cell.col == cols - 1)
+                return;
 
             double mass1 = massOfEmulsionI[i];
             double mass2 = massOfEmulsionI[n_i];
 
-            if (mass1 == 0 || mass2 == 0)
+            if (mass1 == 0 && mass2 == 0) {
+                dataO[n_i] = dataO[i] = data(false);
                 return;
+            }
 
-            if (equals(cell.type, seaType) && equals(cell2.type, seaType))
+            if(!equals(cell.type, seaType) && !equals(cell2.type, seaType)) {
+                dataO[n_i] = dataO[i] = data(false);
                 return;
+            }
 
             double oilDensity = (mass1 * oilDensityI[i] + mass2 * oilDensityI[n_i]) / (mass1 + mass2);
             double temperature = (cell.temperature + cell2.temperature) / 2;
             double waterDensity = calculateWaterDensity(temperature, salinity);
             double kinematicWaterViscosity = calcWaterDynamicViscosity(temperature, salinity) / waterDensity;
             double delta = (waterDensity - oilDensity) / waterDensity;
-            double base = (g * delta * volume * volume) / (sycl::sqrt(kinematicWaterViscosity));
+            double base = (g * delta * tvolume * tvolume) / (sycl::sqrt(kinematicWaterViscosity));
             double diffusion =
                     0.49 / sycl::pow(spreadingCoefficient, 2.0) * sycl::pow(base, 1.0 / 3) * 1 / sycl::sqrt(time);
 
             double deltaMass = (0.5 * (mass2 - mass1) *
                                 (1 - sycl::exp(-2 * diffusion / (cellSize * cellSize) * timestep)));
 
-            if (deltaMass == 0)
+            if (deltaMass == 0) {
+                dataO[n_i] = dataO[i] = data(false);
                 return;
+            }
 
-            double ratio = (deltaMass < 0) * (-deltaMass / mass1) + (deltaMass > 0) * (deltaMass / mass2);
-            int ti = (deltaMass < 0) * (n_i) + (deltaMass > 0) * (i[0]);
-            int fi = (deltaMass < 0) * (i[0]) + (deltaMass > 0) * (n_i);
+            //double ratio = (deltaMass < 0) * (-deltaMass / mass1) + (deltaMass > 0) * (deltaMass / mass2);
+            //int ti = (deltaMass < 0) * (n_i) + (deltaMass > 0) * (i[0]);
+            //int fi = (deltaMass < 0) * (i[0]) + (deltaMass > 0) * (n_i);
+            double ratio = 0;
+            int ti = 0, fi = 0;
+            ratio = (deltaMass < 0) ? (-deltaMass/mass1) : (deltaMass/mass2);
+            ti = (deltaMass < 0) ? n_i : i[0];
+            fi = (deltaMass < 0) ? i[0] : n_i;
 
-            dataO[i] = data(fi, ti, ratio, deltaMass);
+            dataO[n_i] = dataO[i] = data(ti, fi, ratio, deltaMass);
         });
     });
+
     /**
      * Update OP
      */
@@ -451,24 +550,33 @@ void SpreadingSystem::update(sycl::queue &queue,
                 return;
 
             auto cell_i = id(op.cellPos);
-            auto &cell = cellParamsI[cell_i];
-            if (cell.col == cols - 1 || cell.col % 2 != 0 || equals(cell.type, seaType))
+            auto &data = dataI[cell_i];
+
+            if (!data.valid || data.fi != cell_i || !equals(cellParamsI[data.ti].type, seaType))
                 return;
 
-            auto thickness = volumeI[cell_i] / (cellSize * cellSize);
-            auto deltaMass = dataI[cell_i].deltaMass;
-            if (thickness > minSlickThickness && dataI[cell_i].ratio > randomRatioI[i]) {
-                addVec(op.position, Vector2(0, (deltaMass > 0) * (-cellSize) + (deltaMass < 0) * (cellSize)));
-                op.cellPos = posFromId(dataI[cell_i].ti);
+            auto thickness = volumeI[data.fi] / (cellSize * cellSize);
+            auto deltaMass = data.deltaMass;
+            if (thickness > minSlickThickness){
+                if (data.ratio > randomRatioI[i]) {
+                    Vector2 v(0, 0);
+                    if (deltaMass > 0)
+                        v.x = -cellSize;
+                    else
+                        v.x = cellSize;
+
+                    addVec(op.position, v);
+                    op.cellPos = posFromId(data.ti);
+                }
             }
         });
     });
 
     /**
-     * dx=1
-     * dy=0
-     * s=0
-     */
+    * dx=0
+    * dy=1
+    * s=0
+    */
     queue.submit([&](sycl::handler &cgh) {
         auto cellParamsI = cellParamsBuf.get_access<sycl::access::mode::read>(cgh);
         auto oilDensityI = oilDensityBuf.get_access<sycl::access::mode::read>(cgh);
@@ -488,46 +596,58 @@ void SpreadingSystem::update(sycl::queue &queue,
         double cellSize = config.cellSize;
         double spreadingCoefficient = config.spreadingCoefficient;
 
-        cgh.parallel_for<class SSCalc4>(sycl::range<1>(cellParamsBuf.get_count()), [=](sycl::id<1> i) {
+        cgh.parallel_for<class SSCalc3>(sycl::range<1>(cellParamsBuf.get_count()), [=](sycl::id<1> i) {
             auto &cell = cellParamsI[i];
-
-            if (cell.col == cols - 1 || cell.col % 2 != 1)
-                return;
-
+            //second cell
             auto n_i = i[0] + cols;
             auto &cell2 = cellParamsI[n_i];
+
+            if (cell.row % 2 == 1 || cell.row >= rows - 2 || cell.row <= 1 || cell.col == 0 || cell.col == cols - 1)
+                return;
 
             double mass1 = massOfEmulsionI[i];
             double mass2 = massOfEmulsionI[n_i];
 
-            if (mass1 == 0 || mass2 == 0)
+            if (mass1 == 0 && mass2 == 0) {
+                dataO[n_i] = dataO[i] = data(false);
                 return;
+            }
 
-            if (equals(cell.type, seaType) && equals(cell2.type, seaType))
+            if(!equals(cell.type, seaType) && !equals(cell2.type, seaType)) {
+                dataO[n_i] = dataO[i] = data(false);
                 return;
+            }
 
             double oilDensity = (mass1 * oilDensityI[i] + mass2 * oilDensityI[n_i]) / (mass1 + mass2);
             double temperature = (cell.temperature + cell2.temperature) / 2;
             double waterDensity = calculateWaterDensity(temperature, salinity);
             double kinematicWaterViscosity = calcWaterDynamicViscosity(temperature, salinity) / waterDensity;
             double delta = (waterDensity - oilDensity) / waterDensity;
-            double base = (g * delta * volume * volume) / (sycl::sqrt(kinematicWaterViscosity));
+            double base = (g * delta * tvolume * tvolume) / (sycl::sqrt(kinematicWaterViscosity));
             double diffusion =
                     0.49 / sycl::pow(spreadingCoefficient, 2.0) * sycl::pow(base, 1.0 / 3) * 1 / sycl::sqrt(time);
 
             double deltaMass = (0.5 * (mass2 - mass1) *
                                 (1 - sycl::exp(-2 * diffusion / (cellSize * cellSize) * timestep)));
 
-            if (deltaMass == 0)
+            if (deltaMass == 0) {
+                dataO[n_i] = dataO[i] = data(false);
                 return;
+            }
 
-            double ratio = (deltaMass < 0) * (-deltaMass / mass1) + (deltaMass > 0) * (deltaMass / mass2);
-            int ti = (deltaMass < 0) * (n_i) + (deltaMass > 0) * (i[0]);
-            int fi = (deltaMass < 0) * (i[0]) + (deltaMass > 0) * (n_i);
+            //double ratio = (deltaMass < 0) * (-deltaMass / mass1) + (deltaMass > 0) * (deltaMass / mass2);
+            //int ti = (deltaMass < 0) * (n_i) + (deltaMass > 0) * (i[0]);
+            //int fi = (deltaMass < 0) * (i[0]) + (deltaMass > 0) * (n_i);
+            double ratio = 0;
+            int ti = 0, fi = 0;
+            ratio = (deltaMass < 0) ? (-deltaMass/mass1) : (deltaMass/mass2);
+            ti = (deltaMass < 0) ? n_i : i[0];
+            fi = (deltaMass < 0) ? i[0] : n_i;
 
-            dataO[i] = data(fi, ti, ratio, deltaMass);
+            dataO[n_i] = dataO[i] = data(ti, fi, ratio, deltaMass);
         });
     });
+
     /**
      * Update OP
      */
@@ -568,15 +688,24 @@ void SpreadingSystem::update(sycl::queue &queue,
                 return;
 
             auto cell_i = id(op.cellPos);
-            auto &cell = cellParamsI[cell_i];
-            if (cell.col == cols - 1 || cell.col % 2 != 1 || equals(cell.type, seaType))
+            auto &data = dataI[cell_i];
+
+            if (!data.valid || data.fi != cell_i || !equals(cellParamsI[data.ti].type, seaType))
                 return;
 
-            auto thickness = volumeI[cell_i] / (cellSize * cellSize);
-            auto deltaMass = dataI[cell_i].deltaMass;
-            if (thickness > minSlickThickness && dataI[cell_i].ratio > randomRatioI[i]) {
-                addVec(op.position, Vector2(0, (deltaMass > 0) * (-cellSize) + (deltaMass < 0) * (cellSize)));
-                op.cellPos = posFromId(dataI[cell_i].ti);
+            auto thickness = volumeI[data.fi] / (cellSize * cellSize);
+            auto deltaMass = data.deltaMass;
+            if (thickness > minSlickThickness){
+                if (data.ratio > randomRatioI[i]) {
+                    Vector2 v(0, 0);
+                    if (deltaMass > 0)
+                        v.x = -cellSize;
+                    else
+                        v.x = cellSize;
+
+                    addVec(op.position, v);
+                    op.cellPos = posFromId(data.ti);
+                }
             }
         });
     });
