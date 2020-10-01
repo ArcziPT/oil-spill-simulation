@@ -204,8 +204,8 @@ void CellGrid::setOil(int x, int y, double mass)
      int i = id(OilPoint::Params::CellPos(x,y));
 
  	for (int j = 0; j < n; j++){
- 		auto px = (double)(cellsParams[i].col * config.cellSize + dist(mt));
- 		auto py = (double)(cellsParams[i].row * config.cellSize + dist(mt));
+ 		auto px = (double)(cellsParams[i].row * config.cellSize + dist(mt));
+ 		auto py = (double)(cellsParams[i].col * config.cellSize + dist(mt));
 
  		cellsOilPointsParams.emplace_back(OilPoint::Params(
  		        config.initialMassOfOilPoint,
@@ -213,7 +213,7 @@ void CellGrid::setOil(int x, int y, double mass)
  		        Vector2(px, py),
  		        config.initialDensityOfOilPoint,
  		        config.viscosity,
- 		        OilPoint::Params::CellPos(cellsParams[i].col, cellsParams[i].row)));
+ 		        OilPoint::Params::CellPos(cellsParams[i].row, cellsParams[i].col)));
  		
  		for(auto& comp : config.oilComponents){
             cellsOilPointsComponents.push_back(comp);

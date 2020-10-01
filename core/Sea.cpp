@@ -148,23 +148,24 @@ void Sea::update()
 
     for (auto& system : systems)
     {
-        /*opBufferPtr.reset(nullptr);
+        opBufferPtr.reset(nullptr);
         auto oil = cells.getOil();
-        createOpBuffer();*/
+        createOpBuffer();
         system->update(*queuePtr, *cellBufferPtr, *opBufferPtr, *componentBufferPtr, timestep);
-        /*opBufferPtr.reset(nullptr);
-        auto oil2 = cells.getOil();
+        queuePtr->wait();
+        opBufferPtr.reset(nullptr);
         int c = 0;
-        for(int i=0; i<oil2.size(); i++){
-            for(int j=0; j<oil2[i].size(); j++){
-                if(std::abs(oil2[i][j] - oil[i][j]) > 1)
+        auto oil2 = cells.getOil();
+        for(int i=0; i<oil.size(); i++){
+            for(int j=0; j<oil[0].size(); j++){
+                if(std::abs(oil[i][j] - oil2[i][j]) > 1){
                     c++;
+                }
             }
         }
         std::cout<<"c="<<c<<" ";
-        createOpBuffer();*/
+        createOpBuffer();
     }
-    std::cout<<std::endl;
     timeCounter.update(timestep);
     //statistics.update(timeCounter, cells);
 }
